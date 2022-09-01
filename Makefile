@@ -1,30 +1,35 @@
+# Give Make something to do if called without args
 all: all-preset-composes
 
 # The generated compose files are dependent on the Python environment and the scripts that generate them
 COMPOSE_PREREQS := Pipfile.lock embedder/compose_generator.py embedder/flow.py
 
-# Look for any files in the format embedder-*.yml in the embedder directory
-vpath embedder-%.yml embedder
+# Look for .yml files first in the user profiles then in default profiles
+vpath %.yml embedder/profiles/user
+vpath %.yml embedder/profiles
 
 # Our embedder compose file profiles - these are actually built using Make properly!
 # i.e. they won't be rebuilt if the prerequisites haven't changed
-embedder-dev.yml: $(COMPOSE_PREREQS)
-	pipenv run python3 embedder/compose_generator.py dev
+dev.yml: $(COMPOSE_PREREQS)
+	pipenv run python3 embedder/compose_generator.py dev --is-system
 
-embedder-dev-gpu.yml: $(COMPOSE_PREREQS)
-	pipenv run python3 embedder/compose_generator.py dev-gpu --gpu
+dev-gpu.yml: $(COMPOSE_PREREQS)
+	pipenv run python3 embedder/compose_generator.py dev-gpu --gpu --is-system
 
-embedder-prod.yml: $(COMPOSE_PREREQS)
-	pipenv run python3 embedder/compose_generator.py prod --replicas 3 --gpu
+prod.yml: $(COMPOSE_PREREQS)
+	pipenv run python3 embedder/compose_generator.py prod --replicas 3 --gpu --is-system
 
-all-preset-composes: embedder-dev.yml embedder-dev-gpu.yml embedder-prod.yml
+all-preset-composes: dev.yml dev-gpu.yml prod.yml
 
 # Get a list of profiles that actually exist
 # This is so custom profiles are selectable too
 #   Builds a list of filenames (e.g. embedder-dev.yml, embedder-dev-gpu.yml, etc)
-compose_filenames = $(notdir $(wildcard embedder/embedder-*.yml))
+compose_files = $(join $(wildcard embedder/profiles/*.yml), $(wildcard embedder/profiles/user/*.yml))
+compose_filenames = $(notdir $(compose_files))
 #   Strips out just the profile name (e.g. dev, dev-gpu, etc)
-profile_names := $(patsubst embedder-%.yml, %, )
+profile_names = $(patsubst -%.yml, %, )
+#   If the user overrides one of the default configurations, this list will
+#     have duplicates, but that doesn't matter because we `vpath` from profiles/user first.
 
 .PHONY: $(addprefix 'use-', profile_names)
 # use-PROFILE is dependent on embedder-PROFILE.yml
@@ -32,14 +37,14 @@ profile_names := $(patsubst embedder-%.yml, %, )
 # - If this is one of our profiles, defined above, Make will build it then run the command
 # - If not, Make considers it built already and will just run the command
 # - If it doesn't exist, it will fail because Make doesn't know how to build it
-use-%: embedder-%.yml
+use-%: %.yml
 	echo $< > .embedder-profile
 
 # ==================
 # A horrifying hack to avoid the lengthy docker compose command
 # Adapted from https://stackoverflow.com/a/14061796/5257483
 
-PASSTHROUGH_TARGETS = dc
+PASSTHROUGH_TARGETS := dc
 ifneq ($(filter $(firstword $(MAKECMDGOALS)),$(PASSTHROUGH_TARGETS)),)
   RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   $(eval $(RUN_ARGS):;@:)

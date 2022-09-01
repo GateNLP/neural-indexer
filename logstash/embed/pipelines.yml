@@ -1,0 +1,3 @@
+- pipeline.id: embed
+  path.config: "/usr/share/logstash/pipeline/embed.conf"
+  queue.type: persisted

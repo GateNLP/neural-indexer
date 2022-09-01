@@ -1,0 +1,4 @@
+
+- pipeline.id: ingest
+  path.config: "/usr/share/logstash/pipeline/ingest.conf"
+  queue.type: persisted

@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "**/pipeline/*.conf": "logstash",
+        "embedder/embedder-*.yml": "dockercompose"
+    }
+}

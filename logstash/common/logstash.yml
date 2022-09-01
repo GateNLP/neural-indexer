@@ -1,0 +1,4 @@
+http.host: "0.0.0.0"
+
+monitoring.enabled: false
+monitoring.elasticsearch.hosts: ${ELASTICSEARCH_HOSTS:}

@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+# Helper script for calling Docker Compose with embedder profile files
+
+function error () {
+    echo -e "\033[31mERROR: \033[0m $1"
+    exit 1
+}
+
+function success() {
+    echo -e "\033[32m$1\033[0m"
+}
+
+if [ "$1" == "set-profile" ]; then
+    PROFILE_PATH_USER="embedder/profiles/user/$2.yml"
+    PROFILE_PATH_SYSTEM="embedder/profiles/$2.yml"
+
+
+    if [ -f $PROFILE_PATH_USER ]; then
+        PROFILE_PATH=$PROFILE_PATH_USER
+    elif [ -f $PROFILE_PATH_SYSTEM ]; then
+        PROFILE_PATH=$PROFILE_PATH_SYSTEM
+    else
+        error "Profile could not be found at $PROFILE_PATH_USER or $PROFILE_PATH_SYSTEM."
+        exit
+    fi
+    
+    success "Setting preferred profile to $PROFILE_PATH"
+
+    echo $PROFILE_PATH > .embedder-profile
+
+    exit
+fi;
+
+
+# Detect compose command prefix
+docker compose &> /dev/null
+if [ $? == 0 ]; then
+    DOCKER_COMPOSE=(docker compose)
+else
+    DOCKER_COMPOSE=(docker-compose)
+fi
+
+DOCKER_COMPOSE+=(-f docker-compose.yml)
+
+if [ ! -f ".embedder-profile" ]; then
+    error "Chose an embedder profile with 'make use-PROFILE' first"
+fi
+
+EMBEDDER_PROFILE="$(cat .embedder-profile)"
+
+if [ ! -f $EMBEDDER_PROFILE ]; then
+    error "Selected embedder profile ($EMBEDDER_PROFILE) no longer exists"
+fi
+
+DOCKER_COMPOSE+=(-f $EMBEDDER_PROFILE)
+
+if [ "$1" == "watch-health" ]; then
+    shift 1
+    ARGS+=(ps)
+    ARGS+=("$@")
+    watch "${DOCKER_COMPOSE[@]}" "${ARGS[@]}"
+    exit
+fi
+
+if [ "$1" == "live-logs" ]; then
+    success "Attaching and following new logs, CTRL-C to exit."
+    ARGS+=(logs -f --since 1m)
+fi
+
+ARGS+=("$@")
+
+"${DOCKER_COMPOSE[@]}" "${ARGS[@]}"

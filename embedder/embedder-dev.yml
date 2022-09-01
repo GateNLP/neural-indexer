@@ -89,3 +89,6 @@ services:
   metricbeat:
     environment:
     - JINA_HOSTS=[http://embedder:9091, http://gateway:9090]
+volumes:
+  huggingface:
+    driver: local

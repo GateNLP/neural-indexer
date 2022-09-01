@@ -294,5 +294,3 @@ volumes:
     driver: local
   rabbitmq:
     driver: local
-  huggingface:
-    driver: local

@@ -69,8 +69,12 @@ final_path = os.path.join(os.path.dirname(__file__), compose_filename)
 with open(temp_path, "r") as in_f, open(final_path, "w") as out_f:
     original_compose = yaml.safe_load(in_f)
 
-    # Since this file is going to be an override, we only need this key
-    compose = {"services": original_compose["services"]}
+    # Since this file is going to be an override, we only need the services
+    # and a definition for the huggingface cache volume
+    compose = {
+        "services": original_compose["services"],
+        "volumes": {"huggingface": {"driver": "local"}},
+    }
 
     # Create a list of Prometheus endpoints to watch
     service_monitoring_hosts = []

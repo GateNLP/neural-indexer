@@ -197,3 +197,6 @@ services:
     environment:
     - JINA_HOSTS=[http://embedder-rep-0:9091, http://embedder-rep-1:9091, http://embedder-rep-2:9091,
       http://gateway:9090]
+volumes:
+  huggingface:
+    driver: local

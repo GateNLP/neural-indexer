@@ -2,5 +2,8 @@
     "files.associations": {
         "**/pipeline/*.conf": "logstash",
         "embedder/embedder-*.yml": "dockercompose"
+    },
+    "terminal.integrated.env.osx": {
+        "PIPENV_ACTIVE": "1"
     }
 }

@@ -197,6 +197,7 @@ services:
       - RABBITMQ_HOSTS=queue
       - RABBITMQ_USERNAME=rabbit
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - ELASTIC_INDEX=${ELASTIC_INDEX}
   logstashembed:
     depends_on:
       es01:
@@ -207,6 +208,8 @@ services:
         condition: service_healthy
       queue:
         condition: service_healthy
+      # This will get overriden, but keep it here as it prevents this service starting up
+      # if no embedder is loaded at all
       gateway:
         condition: service_healthy
       # Embedding services will be overriden here
@@ -228,6 +231,7 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - JINA_GATEWAY_URL=http://gateway:52592
       - EMBEDDING_VERSION=1
+      - ELASTIC_INDEX=${ELASTIC_INDEX}
   metricbeat:
     depends_on:
       es01:

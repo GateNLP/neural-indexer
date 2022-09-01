@@ -92,20 +92,33 @@ with open(temp_path, "r") as in_f, open(final_path, "w") as out_f:
     # Create a list of Prometheus endpoints to watch
     service_monitoring_hosts = []
     for service_name, service in compose["services"].items():
-        # Currently this is always 9090 or 9091 but better safe than sorry
+        # Find monitoring ports from expose
+        # Typically 9090 then 9091,9092,... for executors
         monitoring_port = list(
             filter(lambda p: 9000 <= int(p) <= 9999, service["expose"])
         )
-
+        
         assert (
             len(monitoring_port) == 1
-        ), "Service {} has more than one possible monitoring port: {}".format(
+        ), "Service {} has does not have exactly one possible monitoring port: {}".format(
             service_name, ",".join(monitoring_port)
         )
+        monitoring_port = monitoring_port[0]
 
         service_monitoring_hosts.append(
-            "http://{}:{}".format(service_name, monitoring_port[0])
+            "http://{}:{}".format(service_name, monitoring_port)
         )
+
+        # Don't forward the monitoring port
+        compose["services"][service_name]["ports"].remove('{0}:{0}'.format(monitoring_port))
+        # Remove service ports if now empty
+        if len(compose["services"][service_name]["ports"]) == 0:
+            del compose["services"][service_name]["ports"]
+
+        # Patch healthcheck for embedders to be more realistic
+        if "embedder" in service_name:
+            compose["services"][service_name]["healthcheck"]["interval"] = "10s"
+            compose["services"][service_name]["healthcheck"]["retries"] = 60
 
     # Add Jina containers to logstashembed's dependencies
     compose["services"]["logstashembed"] = {

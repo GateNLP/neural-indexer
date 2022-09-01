@@ -26,7 +26,7 @@ services:
     - '3'
     - --monitoring
     - --port-monitoring
-    - '9091'
+    - '9090'
     - --uses-metas
     - '{}'
     - --uses-with
@@ -46,15 +46,14 @@ services:
     environment:
     - JINA_LOG_LEVEL=INFO
     expose:
-    - 9091
+    - 9090
     healthcheck:
-      interval: 2s
+      interval: 10s
+      retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
     image: jinahub/u9pqs8eb:630fad26b9f2f6093ed37cb1
     networks:
     - default
-    ports:
-    - 9091:9091
     volumes: &id001
     - huggingface:/root/.cache/huggingface
   embedder-rep-1:
@@ -72,7 +71,7 @@ services:
     - '3'
     - --monitoring
     - --port-monitoring
-    - '9091'
+    - '9090'
     - --uses-metas
     - '{}'
     - --uses-with
@@ -92,15 +91,14 @@ services:
     environment:
     - JINA_LOG_LEVEL=INFO
     expose:
-    - 9091
+    - 9090
     healthcheck:
-      interval: 2s
+      interval: 10s
+      retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
     image: jinahub/u9pqs8eb:630fad26b9f2f6093ed37cb1
     networks:
     - default
-    ports:
-    - 9091:9091
     volumes: *id001
   embedder-rep-2:
     command:
@@ -117,7 +115,7 @@ services:
     - '3'
     - --monitoring
     - --port-monitoring
-    - '9091'
+    - '9090'
     - --uses-metas
     - '{}'
     - --uses-with
@@ -137,15 +135,14 @@ services:
     environment:
     - JINA_LOG_LEVEL=INFO
     expose:
-    - 9091
+    - 9090
     healthcheck:
-      interval: 2s
+      interval: 10s
+      retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
     image: jinahub/u9pqs8eb:630fad26b9f2f6093ed37cb1
     networks:
     - default
-    ports:
-    - 9091:9091
     volumes: *id001
   gateway:
     command:
@@ -183,7 +180,6 @@ services:
     - default
     ports:
     - 52592:52592
-    - 9090:9090
   logstashembed:
     depends_on:
       embedder-rep-0:
@@ -196,7 +192,7 @@ services:
         condition: service_healthy
   metricbeat:
     environment:
-    - JINA_HOSTS=[http://embedder-rep-0:9091, http://embedder-rep-1:9091, http://embedder-rep-2:9091,
+    - JINA_HOSTS=[http://embedder-rep-0:9090, http://embedder-rep-1:9090, http://embedder-rep-2:9090,
       http://gateway:9090]
 volumes:
   huggingface:

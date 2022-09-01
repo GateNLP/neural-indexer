@@ -22,7 +22,7 @@ services:
     - '8081'
     - --monitoring
     - --port-monitoring
-    - '9091'
+    - '9090'
     - --uses-metas
     - '{}'
     - --uses-with
@@ -33,15 +33,14 @@ services:
     environment:
     - JINA_LOG_LEVEL=INFO
     expose:
-    - 9091
+    - 9090
     healthcheck:
-      interval: 2s
+      interval: 10s
+      retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
     image: jinahub/u9pqs8eb:630f27ba4580a7bfe97c2f5e
     networks:
     - default
-    ports:
-    - 9091:9091
     volumes:
     - huggingface:/root/.cache/huggingface
   gateway:
@@ -80,7 +79,6 @@ services:
     - default
     ports:
     - 52592:52592
-    - 9090:9090
   logstashembed:
     depends_on:
       embedder:
@@ -89,7 +87,7 @@ services:
         condition: service_healthy
   metricbeat:
     environment:
-    - JINA_HOSTS=[http://embedder:9091, http://gateway:9090]
+    - JINA_HOSTS=[http://embedder:9090, http://gateway:9090]
 volumes:
   huggingface:
     driver: local

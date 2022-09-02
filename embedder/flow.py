@@ -18,9 +18,9 @@ def generate_flow(
         protocol="HTTP",
         no_crud_endpoints=True,
     ).add(
-        uses=("jinahub+docker://TransformerTorchEncoder/latest" + executor_suffix),
+        uses=("jinahub+docker://TransformerTorchEncoderCUDA113/latest" + executor_suffix),
         name="embedder",
-        port_monitoring=9091,
+        port_monitoring=9090,
         volumes="huggingface:/root/.cache/huggingface",
         uses_with=embedder_uses_with,
         env={"JINA_LOG_LEVEL": "INFO"},

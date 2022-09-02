@@ -51,7 +51,7 @@ services:
       interval: 10s
       retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
-    image: jinahub/u9pqs8eb:630fad26b9f2f6093ed37cb1
+    image: jinahub/1j3hj4su:631204aac73fca0ce07cedea
     networks:
     - default
     volumes: &id001
@@ -96,7 +96,7 @@ services:
       interval: 10s
       retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
-    image: jinahub/u9pqs8eb:630fad26b9f2f6093ed37cb1
+    image: jinahub/1j3hj4su:631204aac73fca0ce07cedea
     networks:
     - default
     volumes: *id001
@@ -140,7 +140,7 @@ services:
       interval: 10s
       retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
-    image: jinahub/u9pqs8eb:630fad26b9f2f6093ed37cb1
+    image: jinahub/1j3hj4su:631204aac73fca0ce07cedea
     networks:
     - default
     volumes: *id001

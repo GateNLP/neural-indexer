@@ -77,24 +77,16 @@ However, this is very unwieldly, particularly because you must subsitute the cor
 
 To simplify this, a helper script is provided which automatically runs Docker Compose with the correct `-f` arguments.
 
-1. Choose the environment with `./dc use PROFILE`
-    * Profile should be the name of the yml file, without extension - e.g. `./dc usedev` for `embedder/profiles/dev.yml`
-    * User profiles take precedence over system profiles, so `./dc use dev` will use `embedder/profiles/user/dev.yml` (if it exists) over `embedder/profiles/dev.yml`
+1. Choose the environment with `./dc set-profile PROFILE`
+    * Profile should be the name of the yml file, without extension - e.g. `./dc set-profile dev` for `embedder/profiles/dev.yml`
+    * User profiles take precedence over system profiles, so `./dc set-profile dev` will use `embedder/profiles/user/dev.yml` (if it exists) over `embedder/profiles/dev.yml`
 2. Run the helper with normal Compose arguments:
 ```sh
 $ ./dc <command>
 ```
 
-
-<!-- * Choose from the [existing environments](embedder/), or create your own with `pipenv run embedder/compose_generator.py`
-* Run `make use-PROFILE` to set `embedder-PROFILE.yml` as your preferred profile -->
-
 ### 3. Start Project
 
-<!-- > **Note**
-> Docker Compose must be told to use both the root `docker-compose.yml` file and the selected embedder profile's file. This can be done by prefixing all commands with `-f`, i.e. `docker compose -f docker-compose.yml -f embedder/embedder-PROFILE.yml <command>`.
->
-> This is quite unwiedly, so `make dc <command>` can be used instead as a shortcut. It automatically uses the profile selected with `make use-PROFILE`. However, any `--arguments` will be treated as arguments to Make instead of `docker compose`. This can be avoided by using `make -- dc <command> --arguments` instead. -->
 
 1. Run `./dc up -d` to bring up containers
 2. Use `./dc watch-health` to live-refresh the health, or `./dc live-logs` to follow the system logs

@@ -10,6 +10,3 @@ jina = "==3.8.1"
 black = "~=22.6.0"
 isort = "~=5.10.1"
 flake8 = "~=5.0.4"
-
-[requires]
-python_version = ">=3.9"

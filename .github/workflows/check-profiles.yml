@@ -23,7 +23,7 @@ jobs:
           cache: 'pipenv'
       
       - name: Install Pipenv
-        run: pipx install pipenv
+        run: pip install pipenv
         
       - name: Install Pipenv Dependencies
         run: pipenv install

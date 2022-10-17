@@ -246,6 +246,7 @@ services:
     volumes:
       - certs:/usr/share/metricbeat/certs
       - ./metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+    command: ["--strict.perms=false"]
     environment:
       - ELASTICSEARCH_USERNAME=elastic
       - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}

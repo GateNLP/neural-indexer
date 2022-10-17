@@ -52,6 +52,7 @@ You will need:
 Copy `.env.example` to `.env` and complete the missing variables
 * The `KIBANA_` and `ELASTIC_` passwords should be set securely now, as they are passed to other services so cannot be changed whilst running. Actual users can be created using the `elastic` superuser later.
 * `LOGSTASH_INGEST` should be a path to a directory that will contain the files to ingest - either absolute or relative to the root directory.
+* If you wish to use a GPU-accelerated embedder, set `EXECUTOR_GPU` to the ID of the GPU to use
 
 > **Warning**
 > It is **strongly advised** that the `LOGSTASH_INGEST` directory is empty until the system is online and healthy, and that data is moved into it file-by-file.
@@ -87,6 +88,7 @@ $ ./dc <command>
 
 ### 3. Start Project
 
+> **Note**: If you haven't run Elasticsearch on this system before, you may need to [alter the `vm.max_map_count` property](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#_set_vm_max_map_count_to_at_least_262144), otherwise Elasticsearch will fail to start
 
 1. Run `./dc up -d` to bring up containers
 2. Use `./dc watch-health` to live-refresh the health, or `./dc live-logs` to follow the system logs

@@ -21,7 +21,7 @@ services:
     - --port
     - '8081'
     - --gpus
-    - ${EXECUTOR_GPUS}
+    - device=${EXECUTOR_GPU}
     - --replicas
     - '3'
     - --monitoring
@@ -39,7 +39,8 @@ services:
           devices:
           - capabilities:
             - gpu
-            count: ${EXECUTOR_GPUS}
+            device_ids:
+            - ${EXECUTOR_GPU}
             driver: nvidia
     entrypoint:
     - jina
@@ -66,7 +67,7 @@ services:
     - --port
     - '8081'
     - --gpus
-    - ${EXECUTOR_GPUS}
+    - device=${EXECUTOR_GPU}
     - --replicas
     - '3'
     - --monitoring
@@ -84,7 +85,8 @@ services:
           devices:
           - capabilities:
             - gpu
-            count: ${EXECUTOR_GPUS}
+            device_ids:
+            - ${EXECUTOR_GPU}
             driver: nvidia
     entrypoint:
     - jina
@@ -110,7 +112,7 @@ services:
     - --port
     - '8081'
     - --gpus
-    - ${EXECUTOR_GPUS}
+    - device=${EXECUTOR_GPU}
     - --replicas
     - '3'
     - --monitoring
@@ -128,7 +130,8 @@ services:
           devices:
           - capabilities:
             - gpu
-            count: ${EXECUTOR_GPUS}
+            device_ids:
+            - ${EXECUTOR_GPU}
             driver: nvidia
     entrypoint:
     - jina

@@ -39,8 +39,8 @@ args_sorted = sorted(vars(args).items(), key=lambda a: a[0])
 
 if args.gpu:
     embedder_additional_uses_with = {"device": "cuda"}
-    # ${EXECUTOR_GPUS} will be resolved by Docker Compose
-    embedder_additional_args = {"gpus": "${EXECUTOR_GPUS}"}
+    # ${EXECUTOR_GPU} will be resolved by Docker Compose
+    embedder_additional_args = {"gpus": "device=${EXECUTOR_GPU}"}
     executor_suffix = "-gpu"
 else:
     embedder_additional_uses_with = {}
@@ -97,7 +97,7 @@ with open(temp_path, "r") as in_f, open(final_path, "w") as out_f:
         monitoring_port = list(
             filter(lambda p: 9000 <= int(p) <= 9999, service["expose"])
         )
-        
+
         assert (
             len(monitoring_port) == 1
         ), "Service {} has does not have exactly one possible monitoring port: {}".format(
@@ -110,15 +110,33 @@ with open(temp_path, "r") as in_f, open(final_path, "w") as out_f:
         )
 
         # Don't forward the monitoring port
-        compose["services"][service_name]["ports"].remove('{0}:{0}'.format(monitoring_port))
+        compose["services"][service_name]["ports"].remove(
+            "{0}:{0}".format(monitoring_port)
+        )
         # Remove service ports if now empty
         if len(compose["services"][service_name]["ports"]) == 0:
             del compose["services"][service_name]["ports"]
 
-        # Patch healthcheck for embedders to be more realistic
         if "embedder" in service_name:
+            # Change healthcheck to be more realistic
             compose["services"][service_name]["healthcheck"]["interval"] = "10s"
             compose["services"][service_name]["healthcheck"]["retries"] = 60
+
+            # Patch Jina's incorrect GPU output
+            if args.gpu:
+                gpu_info = (compose["services"][service_name]["deploy"]
+                        ["resources"]["reservations"]["devices"][0])  # fmt: skip
+
+                if "count" in gpu_info:
+                    del gpu_info["count"]
+                    # ${EXECUTOR_GPU} will be resolved by Docker Compose
+                    gpu_info["device_ids"] = ["${EXECUTOR_GPU}"]
+                    (compose["services"][service_name]["deploy"]
+                        ["resources"]["reservations"]["devices"][0]) = gpu_info  # fmt: skip
+                else:
+                    print(
+                        "Notice: Couldn't patch Jina GPU output, may have been fixed upstream."
+                    )
 
     # Add Jina containers to logstashembed's dependencies
     compose["services"]["logstashembed"] = {

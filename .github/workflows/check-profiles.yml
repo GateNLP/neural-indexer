@@ -34,6 +34,8 @@ jobs:
 
       - name: Validate profile files
         run: |
+          cp .env.ci .env
+          mkdir dummy_ingest
           for profile in ./embedder/profiles/*.yml
           do
             echo $profile

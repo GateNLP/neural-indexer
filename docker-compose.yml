@@ -6,6 +6,7 @@ services:
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
       - ./setup/certs:/usr/share/elasticsearch/cert_setup:ro
+      - ./setup/saved_objects.ndjson:/usr/share/elasticsearch/saved_objects.ndjson:ro
     user: "0"
     command: "bash cert_setup/setup.sh"
     environment:

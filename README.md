@@ -97,3 +97,5 @@ $ ./dc <command>
 ### 4. Begin Ingesting
 
 To ingest, place content in the directory specified in the `.env` file.
+
+Files must be a series of gzipped JSON files, with one JSON object per line, with the extension `.json.gz`

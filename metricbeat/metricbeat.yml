@@ -12,8 +12,8 @@ metricbeat.modules:
   period: 10s
   xpack.enabled: true
   hosts: ${ELASTICSEARCH_HOSTS:}
-  username: elastic
-  password: password
+  username: ${ELASTICSEARCH_USERNAME:}
+  password: ${ELASTICSEARCH_PASSWORD:}
   ssl.enabled: true
   ssl.certificate_authorities: ["/usr/share/metricbeat/certs/ca/ca.crt"]
   ssl.verification_mode: "certificate"

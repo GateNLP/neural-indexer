@@ -42,10 +42,19 @@ This project is a (relatively) standard Docker Compose project, with a few quirk
 ### 0. Prerequisites
 
 You will need:
+* Docker and Docker Compose installed
+    * If you want to GPU-accelerate the embedder, you will also need the [Nvidia Container Runtime](https://docs.docker.com/config/containers/resource_constraints/#gpu)
+* A `vm.max_map_count` configured to at least 262,144 - see the [Elasticsearch docs](https://www.elastic.co/guide/en/elasticsearch/reference/8.4/docker.html#_set_vm_max_map_count_to_at_least_262144) for instructions
 
-* An installation of Docker
-* Python (>=3.8) and [Pipenv](https://pipenv.pypa.io/en/latest/)
-    * This is only used for some orchestration, not the application itself
+
+Additionally, consider the following warnings:
+
+* Docker uses `/var/lib/docker` as its default data storage directory, which on most systems will be on your boot drive. You will likely be storing a **significant** quantity of data in Elasticsearch, so the boot disk may not be sufficient. To change this, you will need to modify the [Docker daemon's configuration](https://docs.docker.com/config/daemon/systemd/).
+* You should configure a way of backing up your Elastic instance. See the [Snapshot and Restore](https://www.elastic.co/guide/en/elasticsearch/reference/8.4/snapshot-restore.html) documentation.
+
+If you wish to customise the embedding service, you will also need:
+
+* Python 3.9 and [Pipenv](https://pipenv.pypa.io/en/latest/)
 
 ### 1. Preparing Environment
 
@@ -87,9 +96,6 @@ $ ./dc <command>
 ```
 
 ### 3. Start Project
-
-> **Note**: If you haven't run Elasticsearch on this system before, you may need to [alter the `vm.max_map_count` property](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#_set_vm_max_map_count_to_at_least_262144), otherwise Elasticsearch will fail to start
-
 1. Run `./dc up -d` to bring up containers
 2. Use `./dc watch-health` to live-refresh the health, or `./dc live-logs` to follow the system logs
 3. Once Kibana is ready, log in with the elastic credentials set in `.env` and go to the Stack monitoring page. It will take a few minutes for Metricbeat to start sending logs from the Elasticsearch cluster and Logstash instances, so wait and check they're all ready.
@@ -98,4 +104,6 @@ $ ./dc <command>
 
 To ingest, place content in the directory specified in the `.env` file.
 
-Files must be a series of gzipped JSON files, with one JSON object per line, with the extension `.json.gz`
+Files must be a series of gzipped JSON files, with one JSON object per line, with the extension `.json.gz`.
+
+A dashboard called "Tweet Ingest Overview" is automatically created during setup which displays information about the progress of the ingest.

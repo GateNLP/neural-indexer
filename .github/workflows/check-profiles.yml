@@ -31,6 +31,14 @@ jobs:
       - name: Generate profile files
         run: make all-profile-composes --always-make
         timeout-minutes: 10
+
+      - name: Validate profile files
+        run: |
+          for profile in ./embedder/profiles/*.yml
+          do
+            echo $profile
+            docker compose -f docker-compose.yml -f $profile config > /dev/null
+          done
         
       - name: Get changed files
         id: changed-files

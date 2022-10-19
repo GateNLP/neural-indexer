@@ -24,6 +24,9 @@ def generate_flow(
         port_monitoring=9090,
         protocol="HTTP",
         no_crud_endpoints=True,
+        name="Tweet Ingest Embedder",
+        title="Tweet Ingest Embedder",
+        description=f"Embeds documents with {embedder_uses_with['pretrained_model_name_or_path']}",
     ).add(
         uses=(
             "docker://ghcr.io/freddyheppell/transformer-torch-encoder-cu113:latest"
@@ -35,7 +38,7 @@ def generate_flow(
         uses_with=embedder_uses_with,
         env={"JINA_LOG_LEVEL": "INFO"},
         replicas=replicas,
-        **embedder_additional_args
+        **embedder_additional_args,
     )
 
     f.expose_endpoint("/embed", summary="Embed a document")

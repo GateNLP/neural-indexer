@@ -5,6 +5,7 @@ import os
 import tempfile
 
 import flow
+import jina
 import yaml
 from dotenv import load_dotenv
 
@@ -91,6 +92,11 @@ with open(temp_path, "r") as in_f, open(final_path, "w") as out_f:
         "services": original_compose["services"],
         "volumes": {"huggingface": {"driver": "local"}},
     }
+
+    # Adjust Gateway Version
+    image = compose["services"]["gateway"]["image"]
+    image = image.replace("master", jina.__version__)
+    compose["services"]["gateway"]["image"] = image
 
     # Create a list of Prometheus endpoints to watch
     service_monitoring_hosts = []

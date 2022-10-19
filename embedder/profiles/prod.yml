@@ -98,7 +98,7 @@ services:
       interval: 10s
       retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
-    image: jinahub/15kiwpqa:6332e35de1a35b3b6831496a
+    image: ghcr.io/freddyheppell/transformer-torch-encoder-cu113:latest-gpu
     networks:
     - default
     volumes: *id001
@@ -143,7 +143,7 @@ services:
       interval: 10s
       retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
-    image: jinahub/15kiwpqa:6332e35de1a35b3b6831496a
+    image: ghcr.io/freddyheppell/transformer-torch-encoder-cu113:latest-gpu
     networks:
     - default
     volumes: *id001
@@ -154,6 +154,10 @@ services:
     - ANY
     - --port
     - '52592'
+    - --title
+    - Tweet Ingest Embedder
+    - --description
+    - Embeds documents with sentence-transformers/distiluse-base-multilingual-cased-v2
     - --no-crud-endpoints
     - --expose-endpoints
     - '{"/embed": {"summary": "Embed a document"}}'
@@ -178,7 +182,7 @@ services:
     healthcheck:
       interval: 2s
       test: python -m jina.resources.health_check.gateway localhost:52592 http
-    image: jinaai/jina:master-py38-standard
+    image: jinaai/jina:3.8.1-py38-standard
     networks:
     - default
     ports:

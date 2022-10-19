@@ -31,8 +31,12 @@ until curl -s --cacert config/certs/ca/ca.crt https://es01:9200 | grep -q "missi
 echo "Setting kibana_system password";
 until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
 
+echo "Creating readonly user"
+curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json"  https://es01:9200/_security/user/frontend -d "{\"password\":\"${ELASTIC_READONLY_PASSWORD}\", \"roles\" : [ \"viewer\"]}"
+
 echo "Waiting for Kibana availability";
 until curl -s -u "elastic:${ELASTIC_PASSWORD}" http://kibana:5601/api/status | grep -q "All services are available"; do sleep 30; done;
+
 
 echo "Waiting for Metricbeat to create its dashboards";
 until curl -s -u "elastic:${ELASTIC_PASSWORD}" http://kibana:5601/api/data_views | grep -q "metricbeat-"; do sleep 30; done;

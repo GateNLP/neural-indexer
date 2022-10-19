@@ -12,6 +12,7 @@ services:
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+      - ELASTIC_READONLY_PASSWORD=${ELASTIC_READONLY_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
       interval: 1s
@@ -274,7 +275,7 @@ services:
       - rabbitmq:/var/lib/rabbitmq
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     ports:
-      - 8080:15672
+      - 8081:15672
     healthcheck:
       test:
         [
@@ -284,6 +285,19 @@ services:
       interval: 30s
       timeout: 10s
       retries: 120
+  frontend:
+    build:
+      context: ./frontend
+    volumes:
+      - ./frontend/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    ports:
+      - 8080:8080
+    environment:
+      - JINA_GATEWAY_URL=http://gateway:52592
+      - AUTHP_ADMIN_USER=user
+      - AUTHP_ADMIN_EMAIL=user@example.org
+
 
 networks:
   default:
@@ -304,4 +318,6 @@ volumes:
   logstash_embed_data:
     driver: local
   rabbitmq:
+    driver: local
+  caddy_data:
     driver: local

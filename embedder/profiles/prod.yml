@@ -52,7 +52,7 @@ services:
       interval: 10s
       retries: 60
       test: python -m jina.resources.health_check.pod localhost:8081
-    image: jinahub/15kiwpqa:6332e35de1a35b3b6831496a
+    image: ghcr.io/freddyheppell/transformer-torch-encoder-cu113:latest-gpu
     networks:
     - default
     volumes: &id001

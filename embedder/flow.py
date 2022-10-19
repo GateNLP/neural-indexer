@@ -25,7 +25,10 @@ def generate_flow(
         protocol="HTTP",
         no_crud_endpoints=True,
     ).add(
-        uses=("jinahub+docker://TransformerTorchEncoderCU113/latest" + executor_suffix),
+        uses=(
+            "docker://ghcr.io/freddyheppell/transformer-torch-encoder-cu113:latest"
+            + executor_suffix
+        ),
         name="embedder",
         port_monitoring=9090,
         volumes="huggingface:/root/.cache/huggingface",

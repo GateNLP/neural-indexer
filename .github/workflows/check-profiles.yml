@@ -27,6 +27,9 @@ jobs:
         
       - name: Install Pipenv Dependencies
         run: pipenv install
+
+      - name: Set up env
+        run: cp .env.ci .env
         
       - name: Generate profile files
         run: make all-profile-composes --always-make
@@ -34,7 +37,6 @@ jobs:
 
       - name: Validate profile files
         run: |
-          cp .env.ci .env
           mkdir dummy_ingest
           for profile in ./embedder/profiles/*.yml
           do

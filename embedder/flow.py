@@ -1,13 +1,20 @@
-from jina import Flow
+import logging
+import os
 
-MODEL_NAME = "sentence-transformers/distiluse-base-multilingual-cased-v2"
+from jina import Flow
 
 
 def generate_flow(
     executor_suffix, embedder_additional_uses_with, replicas, embedder_additional_args
 ):
+    model = os.environ.get("EMBEDDING_MODEL", None)
+
+    if model is None:
+        logging.error("Model is not defined in env, set it using `EMBEDDING_MODEL`")
+        exit(1)
+
     embedder_uses_with = {
-        "pretrained_model_name_or_path": MODEL_NAME,
+        "pretrained_model_name_or_path": os.environ["EMBEDDING_MODEL"],
         **embedder_additional_uses_with,
     }
 

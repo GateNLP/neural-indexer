@@ -237,7 +237,7 @@ services:
       - RABBITMQ_USERNAME=rabbit
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - JINA_GATEWAY_URL=http://gateway:52592
-      - EMBEDDING_VERSION=1
+      - EMBEDDING_VERSION=${EMBEDDING_VERSION}
       - ELASTIC_INDEX=${ELASTIC_INDEX}
   metricbeat:
     depends_on:

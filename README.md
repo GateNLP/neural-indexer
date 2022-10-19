@@ -33,7 +33,7 @@ flowchart TD
 
 The subgraph bordered in green in the diagram above is the part of the service responsible for actually producing the embeddings. It uses [Jina](https://github.com/jina-ai/jina) to provide an inference service, which supports replication, monitoring, and a variety of other useful features.
 
-Since the specifics of this service (number of replicas, GPU usage etc) will widely vary between development and production deployments, this part of the project is orchestrated separately.
+Since the specifics of this service (number of replicas, GPU usage etc) will widely vary between development and production deployments, this part of the project is orchestrated separately (see [step 2 of setup](#2-defining-embedding-service)).
 
 ## Setup
 
@@ -95,6 +95,12 @@ To simplify this, a helper script is provided which automatically runs Docker Co
 $ ./dc <command>
 ```
 
+#### 2.1 Changing Embedder Model
+
+The embedder uses [`sentence-transformers/distiluse-base-multilingual-cased-v2`](https://huggingface.co/sentence-transformers/distiluse-base-multilingual-cased-v2) by default. This can be changed in the `.env` file for any Huggingface Transformer model.
+
+The embedder adds an integer version field to documents, specified by the `EMBEDDING_VERSION` environment variable. This can be incremented to distinguish between different versions of embeddings if the model is changed after some documents have been embedded. Currently there is no way to automatically re-queue outdated versions of documents for embedding.
+
 ### 3. Start Project
 1. Run `./dc up -d` to bring up containers
 2. Use `./dc watch-health` to live-refresh the health, or `./dc live-logs` to follow the system logs
@@ -106,4 +112,4 @@ To ingest, place content in the directory specified in the `.env` file.
 
 Files must be a series of gzipped JSON files, with one JSON object per line, with the extension `.json.gz`.
 
-A dashboard called "Tweet Ingest Overview" is automatically created during setup which displays information about the progress of the ingest.
+A dashboard called "Tweet Ingest Overview" is automatically created in Kibana, which displays information about the progress of the ingest.

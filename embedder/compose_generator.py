@@ -6,6 +6,7 @@ import tempfile
 
 import flow
 import yaml
+from dotenv import load_dotenv
 
 parser = argparse.ArgumentParser(description="Generate Jina docker-compose file.")
 parser.add_argument("compose_name", help="Name of the compose file to output")
@@ -36,6 +37,8 @@ parser.add_argument(
 
 args = parser.parse_args()
 args_sorted = sorted(vars(args).items(), key=lambda a: a[0])
+
+load_dotenv()
 
 if args.gpu:
     embedder_additional_uses_with = {"device": "cuda"}

@@ -2,7 +2,7 @@
 all: all-profile-composes
 
 # The generated compose files are dependent on the Python environment and the scripts that generate them
-COMPOSE_PREREQS := Pipfile.lock embedder/compose_generator.py embedder/flow.py
+COMPOSE_PREREQS := .env Pipfile.lock embedder/compose_generator.py embedder/flow.py
 
 # Resolve yml files to the embedder/profiles dir
 vpath %.yml embedder/profiles

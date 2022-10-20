@@ -5,10 +5,9 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
-      - ./setup/certs:/usr/share/elasticsearch/cert_setup:ro
-      - ./setup/saved_objects.ndjson:/usr/share/elasticsearch/saved_objects.ndjson:ro
+      - ./setup:/usr/share/elasticsearch/setup:ro
     user: "0"
-    command: "bash cert_setup/setup.sh"
+    command: "bash setup/setup.sh"
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_PASSWORD=${KIBANA_PASSWORD}
@@ -288,16 +287,14 @@ services:
   frontend:
     build:
       context: ./frontend
-    volumes:
-      - ./frontend/Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
     ports:
       - 8080:8080
     environment:
+      - INDEX_PATTERN_ID=8270ea28-dedb-4353-8fbf-bc83b0310a8a
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_HOST=http://kibana:5601
+      - KIBANA_EXTERNAL_HOST=http://localhost:5601
       - JINA_GATEWAY_URL=http://gateway:52592
-      - AUTHP_ADMIN_USER=user
-      - AUTHP_ADMIN_EMAIL=user@example.org
-
 
 networks:
   default:

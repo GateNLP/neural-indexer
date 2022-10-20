@@ -1,0 +1,12 @@
+http://localhost:8080 {
+    handle /kibana/* {
+        reverse_proxy http://kibana:5601 {
+            header_up Authorization "Basic ZnJvbnRlbmQ6ZWxhc3RpY19yZWFkb25seQ=="
+            header_up Host localhost:8080
+        }
+    }
+    
+    handle * {
+        reverse_proxy http://search:8080
+    }
+}

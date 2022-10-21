@@ -79,11 +79,11 @@ function pullKnnConfig() {
     var config = localStorage.getItem("knn_config");
     if (config !== null) {
         knn_config_state = JSON.parse(config);
-        return
-    }
-    knn_config_state = {
-        "k": 50,
-        "num_candidates": 1000
+    } else {
+        knn_config_state = {
+            "k": 50,
+            "num_candidates": 1000
+        }
     }
 
     knn_k_field.val(knn_config_state["k"]);

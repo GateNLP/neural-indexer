@@ -24,9 +24,11 @@ class SearchQuery(BaseModel):
 class SavedSearchResponse(BaseModel):
     id: str
 
+
 @app.get("/api/health")
 async def health():
     return {"status": "healthy"}
+
 
 @app.get("/api/config")
 async def route_config():

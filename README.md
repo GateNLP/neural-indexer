@@ -104,7 +104,7 @@ The embedder adds an integer version field to documents, specified by the `EMBED
 ### 3. Start Project
 1. Run `./dc up -d` to bring up containers
 2. Use `./dc watch-health` to live-refresh the health, or `./dc live-logs` to follow the system logs
-3. Once Kibana is ready, log in with the elastic credentials set in `.env` and go to the Stack monitoring page. It will take a few minutes for Metricbeat to start sending logs from the Elasticsearch cluster and Logstash instances, so wait and check they're all ready.
+3. Once Kibana is ready, go to `localhost:5601/kibana` and log in with the elastic credentials set in `.env` and go to the Stack monitoring page. It will take a few minutes for Metricbeat to start sending logs from the Elasticsearch cluster and Logstash instances, so wait and check they're all ready.
 
 ### 4. Begin Ingesting
 
@@ -116,6 +116,18 @@ A dashboard called "Tweet Ingest Overview" is automatically created in Kibana, w
 
 ### 5. Search Index
 
-A web interface is provided to search the index, accessible by default on port 8080. You will be prompted to sign in with the `SEARCH_USERNAME` and `SEARCH_PASSWORD` set in the env file.
+Kibana can be accessed at `localhost:5601/kibana` (note the suffix) with the user `elastic` and the password defined by `ELASTIC_PASSWORD`, however it cannot perform vector queries.
 
-Using this interface, you can search the index and view the results in Kibana Discover. You can also use Kibana as a read-only user by going to `localhost:8080/kibana`.
+Instead, a custom search interface is provided at `localhost:8080`, using the credentials set by `ELASTIC_READONLY_USERNAME` and `ELASTIC_READONLY_PASSWORD`. A query document can be entered, and the parameters of the approximate-kNN search adjusted using the controls. It is currently not possible to filter results, as Kibana is unable to alter the properties of an approximate kNN search itself. Please note that each search creates a saved object in the form "UI Search YYYY-MM-DD HH:MM:SS.ssssss", you may wish to purge these periodically.
+
+<details>
+<summary>Why does it create saved objects for each search?</summary>
+
+<blockquote>
+As of writing, Kibana does not support approximate kNN searches. With the old exact kNN method, Kibana could be 'tricked' into performing one. Since the search was performed by a script query, Kibana could just be fed the query object in the URL, and it would just display it in JSON form in the search box but still do the search.
+
+The approximate method is configured by the `knn` key, which is a sibling to `query`. Kibana is unaware this key exists, but if a saved search contains it, it will be passed to Elastic unmodified. So, by manually creating saved searches with the `knn` key, we can get Kibana to perform them, even if it's unaware of it. The problem with this method, however, is Kibana 'helpfully' adds an empty query to our saved search, which causes Elasticsearch to return all documents _in addition to our approximate kNN search_. To bypass this, we also put a query into the saved object which is guaranteed to return 0 results (we query for documents without an `_id` field), and Elastic combines the 0 results with our kNN results.
+
+The downside of this method is that you cannot then additionally filter the results, because filters on approximate kNN queries must be passed as part of the kNN query options (to ensure `k` results are actually returned). Any filters added will do nothing, because they will be considered together with "doesn't have an `_id`".
+</blockquote>
+</details>

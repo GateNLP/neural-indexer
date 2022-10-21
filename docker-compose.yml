@@ -297,6 +297,16 @@ services:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_HOST=http://kibana:5601/kibana
       - JINA_GATEWAY_URL=http://gateway:52592
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s http://localhost:8080/api/health | grep -q '{\"status\":\"healthy\"}'",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 50
   proxy:
     build:
       context: ./proxy
@@ -315,6 +325,16 @@ services:
       - AUTHP_ADMIN_USER=${SEARCH_USERNAME}
       - AUTHP_ADMIN_EMAIL=gate@example.org
       - AUTHP_ADMIN_SECRET=${SEARCH_PASSWORD}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- --tries=1 http://localhost:8080/proxy_health | grep -q 'Healthy'",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 50
 
 networks:
   default:

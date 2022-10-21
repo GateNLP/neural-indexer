@@ -56,6 +56,10 @@ http://localhost:8080 {
 		}
 	}
 
+	route /proxy_health {
+		respond "Healthy"
+	}
+
 	route {
 		authorize with mypolicy
 		reverse_proxy http://search:8080

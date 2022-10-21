@@ -9,4 +9,4 @@ RUN apt-get update && \
 COPY definitions.json /etc/rabbitmq/definitions.json
 
 # Subsitute RABBITMQ_PASSWORD in the definitions file
-RUN envsubst < /etc/rabbitmq/definitions.json | tee /etc/rabbitmq/definitions.json
+RUN envsubst < /etc/rabbitmq/definitions.json | tee /etc/rabbitmq/definitions.json > /dev/null

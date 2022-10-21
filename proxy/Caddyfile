@@ -9,6 +9,8 @@
 
         authentication portal myportal {
             enable identity store localdb
+            cookie lifetime 43200
+            crypto default token lifetime 43200
 
             ui {
                 logo url "../assets/logo.svg"

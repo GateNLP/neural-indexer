@@ -4,7 +4,7 @@ ARG RABBITMQ_PASSWORD
 ENV RABBITMQ_PASSWORD $RABBITMQ_PASSWORD
 
 RUN apt-get update && \
-    apt-get install gettext-base -y && \
+    apt-get install gettext-base -y --no-install-reccomends && \
     rm -rf /var/lib/apt/lists/*
 COPY definitions.json /etc/rabbitmq/definitions.json
 

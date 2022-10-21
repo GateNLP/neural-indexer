@@ -7,7 +7,7 @@ ENV PYTHONFAULTHANDLER 1
 
 FROM base as python-deps
 
-RUN pip install pipenv
+RUN pip install --no-cache-dir pipenv
 
 COPY Pipfile Pipfile.lock ./
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy

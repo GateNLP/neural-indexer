@@ -113,3 +113,9 @@ To ingest, place content in the directory specified in the `.env` file.
 Files must be a series of gzipped JSON files, with one JSON object per line, with the extension `.json.gz`.
 
 A dashboard called "Tweet Ingest Overview" is automatically created in Kibana, which displays information about the progress of the ingest.
+
+### 5. Search Index
+
+A web interface is provided to search the index, accessible by default on port 8080. You will be prompted to sign in with the `SEARCH_USERNAME` and `SEARCH_PASSWORD` set in the env file.
+
+Using this interface, you can search the index and view the results in Kibana Discover. You can also use Kibana as a read-only user by going to `localhost:8080/kibana`.

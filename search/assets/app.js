@@ -1,8 +1,10 @@
 let config;
+let pre_auth_path = '', restored_path = false;
 let results_frame, search_form, search_field, search_button, open_link, copy_link, search_icon, search_spinner;
 
 // Change these to the right index and domain
-const DISCOVER_PATH = "/app/discover"
+const KIBANA_PATH = "/kibana"
+const DISCOVER_PATH = KIBANA_PATH + "/app/discover"
 const VIEW_PATH = "/view/"
 
 const DEFAULT_PATH = () => `#/?_a=(index:'${config.index_pattern_id}')&embed=true`
@@ -13,7 +15,10 @@ function loadConfig() {
             config = data;
             search_button.prop("disabled", false);
             search_field.prop("disabled", false)
-            results_frame[0].src = config.kibana_root + DISCOVER_PATH + DEFAULT_PATH()
+
+            if (!restored_path) {
+                results_frame[0].src = DISCOVER_PATH + DEFAULT_PATH()
+            }
         })
         .fail(function(e) {
             console.error(e);
@@ -28,7 +33,7 @@ function getNonEmbedUrl() {
 }
 
 function displayKibanaFrame(search_id) {
-    let url = `${config.kibana_root}${DISCOVER_PATH}#${VIEW_PATH}${search_id}?embed=true`
+    let url = `${DISCOVER_PATH}#${VIEW_PATH}${search_id}?embed=true`
     results_frame[0].src = url
     search_spinner.hide();
     search_icon.show();
@@ -64,6 +69,24 @@ $(function() {
     search_button.prop("disabled", true)
     loadConfig();
 
+    var params = new URLSearchParams(window.location.hash.slice(1));
+
+    var queryProxy = new Proxy(new URLSearchParams(window.location.hash.slice(1)), {
+        get: (searchParams, prop) => searchParams.get(prop),
+    });
+
+    console.log(params)
+
+    if (queryProxy.return_to !== null) {
+        console.log("return to url detected")
+        let return_url = new URL(queryProxy.return_to, window.location);
+        if (return_url.host === window.location.host && return_url.pathname.startsWith(KIBANA_PATH)) {
+            console.log("going to url")
+            results_frame[0].src = decodeURI(queryProxy.return_to);
+            restored_path = true;
+            window.location.hash = "";
+        }
+    }
 
     search_form.submit(function(e) {
         e.preventDefault();
@@ -81,6 +104,15 @@ $(function() {
         e.preventDefault();
 
         window.open(getNonEmbedUrl());
+    })
+
+    results_frame.on('load', function (e) {
+        if (e.target.contentWindow.location.pathname.startsWith('/auth/login')) {
+            let targetUrl = window.location.pathname + '#return_to=' + encodeURIComponent(pre_auth_path);
+            window.location = '/auth/login?redirect_url=' + encodeURIComponent(targetUrl)
+        } else {
+            pre_auth_path = e.target.contentWindow.location.pathname;
+        }
     })
 
     new ClipboardJS('#copy_link', {

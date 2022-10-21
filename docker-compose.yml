@@ -169,7 +169,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'",
+          "curl -s -I http://localhost:5601/kibana | grep -q 'HTTP/1.1 302 Found'",
         ]
       interval: 10s
       timeout: 10s
@@ -260,7 +260,7 @@ services:
       - ELASTICSEARCH_USERNAME=elastic
       - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTICSEARCH_HOSTS=https://es01:9200
-      - KIBANA_HOST=http://kibana:5601
+      - KIBANA_HOST=http://kibana:5601/kibana
       - LOGSTASH_HOSTS=[http://logstashembed:9600, http://logstashingest:9600]
       - RABBITMQ_HOSTS=http://queue:15672
       - RABBITMQ_USERNAME=rabbit
@@ -289,20 +289,31 @@ services:
   search:
     build:
       context: ./search
+    ports:
+      - 8082:8080
     environment:
       - INDEX_PATTERN_ID=8270ea28-dedb-4353-8fbf-bc83b0310a8a
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_HOST=http://kibana:5601
-      - KIBANA_EXTERNAL_HOST=http://localhost:5601
       - JINA_GATEWAY_URL=http://gateway:52592
   proxy:
-    image: caddy:2.6.2
+    build:
+      context: ./proxy
+      args:
+        - CADDY_VERSION=2.6.2
     volumes:
       - ./proxy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      - ./proxy/auth:/data/auth
     ports:
-      - 8080:8080
+      - ${SEARCH_PORT}:8080
+    environment:
+      - KIBANA_PROXY_USER=frontend
+      - KIBANA_PROXY_PASSWORD=${ELASTIC_READONLY_PASSWORD}
+      - AUTHP_ADMIN_USER=${SEARCH_USERNAME}
+      - AUTHP_ADMIN_EMAIL=gate@example.org
+      - AUTHP_ADMIN_SECRET=${SEARCH_PASSWORD}
 
 networks:
   default:

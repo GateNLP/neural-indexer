@@ -37,12 +37,12 @@ echo "Importing index template";
 curl -s -X PUT --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01:9200/_index_template/embeddable -d @setup/index_template.json | grep -q "\"acknowledged\":true\""
 
 echo "Waiting for Kibana availability";
-until curl -s -u "elastic:${ELASTIC_PASSWORD}" http://kibana:5601/api/status | grep -q "All services are available"; do sleep 10; done;
+until curl -s -u "elastic:${ELASTIC_PASSWORD}" http://kibana:5601/kibana/api/status | grep -q "All services are available"; do sleep 10; done;
 
 echo "Waiting for Metricbeat to create its dashboards";
-until curl -s -u "elastic:${ELASTIC_PASSWORD}" http://kibana:5601/api/data_views | grep -q "metricbeat-"; do sleep 10; done;
+until curl -s -u "elastic:${ELASTIC_PASSWORD}" http://kibana:5601/kibana/api/data_views | grep -q "metricbeat-"; do sleep 10; done;
 
 echo "Importing saved objects";
-curl -s -X POST -u "elastic:${ELASTIC_PASSWORD}" http://kibana:5601/api/saved_objects/_import -H "kbn-xsrf: true" --form file=@setup/saved_objects.ndjson;
+curl -s -X POST -u "elastic:${ELASTIC_PASSWORD}" http://kibana:5601/kibana/api/saved_objects/_import -H "kbn-xsrf: true" --form file=@setup/saved_objects.ndjson;
 
 echo -e "\nAll done!";

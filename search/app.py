@@ -24,7 +24,6 @@ class SavedSearchResponse(BaseModel):
 @app.get("/api/config")
 async def route_config():
     return {
-        "kibana_root": config.kibana_external_host,
         "index_pattern_id": config.index_pattern_id
     }
 

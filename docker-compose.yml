@@ -11,6 +11,7 @@ services:
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+      - ELASTIC_READONLY_USERNAME=${ELASTIC_READONLY_USERNAME}
       - ELASTIC_READONLY_PASSWORD=${ELASTIC_READONLY_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
@@ -276,7 +277,7 @@ services:
       - rabbitmq:/var/lib/rabbitmq
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     ports:
-      - 8081:15672
+      - ${RABBITMQ_PORT}:15672
     healthcheck:
       test:
         [
@@ -289,12 +290,10 @@ services:
   search:
     build:
       context: ./search
-    ports:
-      - 8082:8080
     environment:
       - INDEX_PATTERN_ID=8270ea28-dedb-4353-8fbf-bc83b0310a8a
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - KIBANA_HOST=http://kibana:5601
+      - KIBANA_HOST=http://kibana:5601/kibana
       - JINA_GATEWAY_URL=http://gateway:52592
   proxy:
     build:
@@ -309,7 +308,7 @@ services:
     ports:
       - ${SEARCH_PORT}:8080
     environment:
-      - KIBANA_PROXY_USER=frontend
+      - KIBANA_PROXY_USER=${ELASTIC_READONLY_USERNAME}
       - KIBANA_PROXY_PASSWORD=${ELASTIC_READONLY_PASSWORD}
       - AUTHP_ADMIN_USER=${SEARCH_USERNAME}
       - AUTHP_ADMIN_EMAIL=gate@example.org

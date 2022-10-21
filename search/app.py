@@ -17,6 +17,8 @@ async def home():
 
 class SearchQuery(BaseModel):
     query: str
+    k: int
+    num_candidates: int
 
 
 class SavedSearchResponse(BaseModel):
@@ -32,7 +34,11 @@ async def route_config():
 async def search(query: SearchQuery) -> SavedSearchResponse:
     embedding = embed.embed(query.query)
 
-    search_obj = search_generate.generate_saved_search(embedding)
+    search_obj = search_generate.generate_saved_search(
+        embedding,
+        query.k,
+        query.num_candidates
+    )
     saved_search_id = search_generate.save_search(search_obj)
 
     return {"saved_search_id": saved_search_id}

@@ -2,8 +2,8 @@
     "knn": {
         "field": "embedding",
         "query_vector": null,
-        "k": 10,
-        "num_candidates": 1000
+        "k": null,
+        "num_candidates": null
     },
     "query": {
         "language": "lucene",

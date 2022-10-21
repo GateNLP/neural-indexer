@@ -1,6 +1,8 @@
 let config;
 let pre_auth_path = '', restored_path = false;
 let results_frame, search_form, search_field, search_button, open_link, copy_link, search_icon, search_spinner;
+let knn_k_field, knn_candidates_field;
+let knn_config_state = {};
 
 // Change these to the right index and domain
 const KIBANA_PATH = "/kibana"
@@ -41,7 +43,10 @@ function displayKibanaFrame(search_id) {
 
 function doSearch(queryText) {
     $.ajax("/api/search", {
-        data: JSON.stringify({ query: queryText}),
+        data: JSON.stringify({
+            query: queryText,
+            ...knn_config_state
+        }),
         type: 'POST',
         contentType: 'application/json',
         dataType: "json"
@@ -55,6 +60,36 @@ function doSearch(queryText) {
         })
 }
 
+function updateKnnConfigState() {
+    let k_value = knn_k_field.val();
+    let candidates_value = knn_candidates_field.val();
+
+    knn_config_state = {
+        "k": k_value,
+        "num_candidates": candidates_value
+    }
+    pushKnnConfig();
+}
+
+function pushKnnConfig() {
+    localStorage.setItem("knn_config", JSON.stringify(knn_config_state));
+}
+
+function pullKnnConfig() {
+    var config = localStorage.getItem("knn_config");
+    if (config !== null) {
+        knn_config_state = JSON.parse(config);
+        return
+    }
+    knn_config_state = {
+        "k": 50,
+        "num_candidates": 1000
+    }
+
+    knn_k_field.val(knn_config_state["k"]);
+    knn_candidates_field.val(knn_config_state["num_candidates"]);
+}
+
 $(function() {
     results_frame = $("#results_frame");
     search_form = $("#search_form");
@@ -65,9 +100,13 @@ $(function() {
     search_spinner = $("#search_spinner");
     search_button = $("#search_button");
 
+    knn_k_field = $("#kField");
+    knn_candidates_field = $("#candidatesField")
+
     search_field.prop("disabled", true)
     search_button.prop("disabled", true)
     loadConfig();
+    pullKnnConfig();
 
     var params = new URLSearchParams(window.location.hash.slice(1));
 
@@ -115,9 +154,15 @@ $(function() {
         }
     })
 
+    knn_k_field.on('change', updateKnnConfigState);
+    knn_candidates_field.on('change', updateKnnConfigState);
+
     new ClipboardJS('#copy_link', {
         text: function (trigger) {
             return getNonEmbedUrl()
         },
     });
+
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 });

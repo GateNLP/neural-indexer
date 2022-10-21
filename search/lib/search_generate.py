@@ -15,9 +15,11 @@ search_template = load_template_file("search-template.json")
 search_source_template = load_template_file("search-source-template.json")
 
 
-def generate_saved_search(embedding):
+def generate_saved_search(embedding, k, num_candidates):
     search_source = copy.deepcopy(search_source_template)
     search_source["knn"]["query_vector"] = embedding
+    search_source["knn"]["k"] = k
+    search_source["knn"]["num_candidates"] = num_candidates
     search_source_s = json.dumps(search_source)
 
     saved_search = copy.deepcopy(search_template)

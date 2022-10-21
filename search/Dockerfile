@@ -20,6 +20,5 @@ ENV PATH="/.venv/bin:$PATH"
 RUN useradd --create-home appuser
 WORKDIR /home/appuser
 USER appuser
-COPY . .
 
 ENTRYPOINT [ "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers" ]

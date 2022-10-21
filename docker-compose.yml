@@ -290,6 +290,8 @@ services:
   search:
     build:
       context: ./search
+    volumes:
+      - ./search:/home/appuser
     environment:
       - INDEX_PATTERN_ID=8270ea28-dedb-4353-8fbf-bc83b0310a8a
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}

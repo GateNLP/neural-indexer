@@ -27,7 +27,9 @@ def generate_flow(
         cors=True,
         name="Tweet Ingest Embedder",
         title="Tweet Ingest Embedder",
-        description=f"Embeds documents with {embedder_uses_with['pretrained_model_name_or_path']}",
+        description="Embeds documents with {}".format(
+            embedder_uses_with["pretrained_model_name_or_path"]
+        ),
     ).add(
         uses=(
             "docker://ghcr.io/freddyheppell/transformer-torch-encoder-cu113:latest"

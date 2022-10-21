@@ -35,9 +35,7 @@ async def search(query: SearchQuery) -> SavedSearchResponse:
     embedding = embed.embed(query.query)
 
     search_obj = search_generate.generate_saved_search(
-        embedding,
-        query.k,
-        query.num_candidates
+        embedding, query.k, query.num_candidates
     )
     saved_search_id = search_generate.save_search(search_obj)
 

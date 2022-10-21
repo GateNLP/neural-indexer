@@ -64,6 +64,7 @@ if [ "$1" == "watch-health" ]; then
 fi
 
 if [ "$1" == "live-logs" ]; then
+    shift 1
     success "Attaching and following new logs, CTRL-C to exit."
     ARGS+=(logs -f --since 1m)
 fi

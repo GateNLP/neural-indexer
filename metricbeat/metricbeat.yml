@@ -28,6 +28,7 @@ metricbeat.modules:
   hosts: ${RABBITMQ_HOSTS}
   username: ${RABBITMQ_USERNAME}
   password: ${RABBITMQ_PASSWORD}
+  period: 15s
 - module: prometheus
   enabled: true
   period: 10s

@@ -1,0 +1,17 @@
+{
+  "index_patterns": [
+    "embd-*"
+  ],
+  "template": {
+    "mappings": {
+      "properties": {
+        "embedding": {
+          "type": "dense_vector",
+          "dims": 768,
+          "index": true,
+          "similarity": "cosine"
+        }
+      }
+    }
+  }
+}

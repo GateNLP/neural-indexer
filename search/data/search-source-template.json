@@ -1,0 +1,34 @@
+{
+    "knn": {
+        "field": "embedding",
+        "query_vector": null,
+        "k": null,
+        "num_candidates": null
+    },
+    "query": {
+        "language": "lucene",
+        "query": ""
+    },
+    "filter": [
+        {
+            "meta": {
+                "alias": "**DO NOT REMOVE**",
+                "negate": true,
+                "disabled": false,
+                "type": "exists",
+                "key": "_id",
+                "value": "exists",
+                "indexRefName": "kibanaSavedObjectMeta.searchSourceJSON.filter[0].meta.index"
+            },
+            "query": {
+                "exists": {
+                    "field": "_id"
+                }
+            },
+            "$state": {
+                "store": "appState"
+            }
+        }
+    ],
+    "indexRefName": "kibanaSavedObjectMeta.searchSourceJSON.index"
+}

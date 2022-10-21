@@ -1,0 +1,20 @@
+{
+    "attributes": {
+        "kibanaSavedObjectMeta": {
+            "searchSourceJSON": null
+        },
+        "title": null
+    },
+    "references": [
+        {
+            "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+            "id": null,
+            "type": "index-pattern"
+        },
+        {
+            "name": "kibanaSavedObjectMeta.searchSourceJSON.filter[0].meta.index",
+            "id": null,
+            "type": "index-pattern"
+        }
+    ]
+}

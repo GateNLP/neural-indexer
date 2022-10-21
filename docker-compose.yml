@@ -5,13 +5,14 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
-      - ./setup/certs:/usr/share/elasticsearch/cert_setup:ro
-      - ./setup/saved_objects.ndjson:/usr/share/elasticsearch/saved_objects.ndjson:ro
+      - ./setup:/usr/share/elasticsearch/setup:ro
     user: "0"
-    command: "bash cert_setup/setup.sh"
+    command: "./setup/setup.sh"
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+      - ELASTIC_READONLY_USERNAME=${ELASTIC_READONLY_USERNAME}
+      - ELASTIC_READONLY_PASSWORD=${ELASTIC_READONLY_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
       interval: 1s
@@ -162,12 +163,14 @@ services:
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=true
     mem_limit: ${MEM_LIMIT}
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'",
+          "curl -s -I http://localhost:5601/kibana | grep -q 'HTTP/1.1 302 Found'",
         ]
       interval: 10s
       timeout: 10s
@@ -258,7 +261,7 @@ services:
       - ELASTICSEARCH_USERNAME=elastic
       - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTICSEARCH_HOSTS=https://es01:9200
-      - KIBANA_HOST=http://kibana:5601
+      - KIBANA_HOST=http://kibana:5601/kibana
       - LOGSTASH_HOSTS=[http://logstashembed:9600, http://logstashingest:9600]
       - RABBITMQ_HOSTS=http://queue:15672
       - RABBITMQ_USERNAME=rabbit
@@ -274,7 +277,7 @@ services:
       - rabbitmq:/var/lib/rabbitmq
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     ports:
-      - 8080:15672
+      - ${RABBITMQ_PORT}:15672
     healthcheck:
       test:
         [
@@ -284,6 +287,54 @@ services:
       interval: 30s
       timeout: 10s
       retries: 120
+  search:
+    build:
+      context: ./search
+    volumes:
+      - ./search:/home/appuser
+    environment:
+      - INDEX_PATTERN_ID=8270ea28-dedb-4353-8fbf-bc83b0310a8a
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_HOST=http://kibana:5601/kibana
+      - JINA_GATEWAY_URL=http://gateway:52592
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s http://localhost:8080/api/health | grep -q '{\"status\":\"healthy\"}'",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 50
+  proxy:
+    build:
+      context: ./proxy
+      args:
+        - CADDY_VERSION=2.6.2
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./proxy/auth:/data/auth
+    ports:
+      - ${SEARCH_PORT}:8080
+    environment:
+      - KIBANA_PROXY_USER=${ELASTIC_READONLY_USERNAME}
+      - KIBANA_PROXY_PASSWORD=${ELASTIC_READONLY_PASSWORD}
+      - AUTHP_ADMIN_USER=${SEARCH_USERNAME}
+      - AUTHP_ADMIN_EMAIL=gate@example.org
+      - AUTHP_ADMIN_SECRET=${SEARCH_PASSWORD}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- --tries=1 http://localhost:8080/proxy_health | grep -q 'Healthy'",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 50
 
 networks:
   default:
@@ -304,4 +355,8 @@ volumes:
   logstash_embed_data:
     driver: local
   rabbitmq:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local

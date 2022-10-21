@@ -107,11 +107,11 @@ with open(temp_path, "r") as in_f, open(final_path, "w") as out_f:
             filter(lambda p: 9000 <= int(p) <= 9999, service["expose"])
         )
 
-        assert (
-            len(monitoring_port) == 1
-        ), "Service {} has does not have exactly one possible monitoring port: {}".format(
-            service_name, ",".join(monitoring_port)
+        assert len(monitoring_port) == 1, (
+            f"Service {service_name} has does not have exactly"
+            f" one possible monitoring port: {','.join(monitoring_port)}"
         )
+
         monitoring_port = monitoring_port[0]
 
         service_monitoring_hosts.append(
@@ -133,18 +133,21 @@ with open(temp_path, "r") as in_f, open(final_path, "w") as out_f:
 
             # Patch Jina's incorrect GPU output
             if args.gpu:
-                gpu_info = (compose["services"][service_name]["deploy"]
-                        ["resources"]["reservations"]["devices"][0])  # fmt: skip
+                gpu_info = compose["services"][service_name]["deploy"]["resources"][
+                    "reservations"
+                ]["devices"][0]
 
                 if "count" in gpu_info:
                     del gpu_info["count"]
                     # ${EXECUTOR_GPU} will be resolved by Docker Compose
                     gpu_info["device_ids"] = ["${EXECUTOR_GPU}"]
-                    (compose["services"][service_name]["deploy"]
-                        ["resources"]["reservations"]["devices"][0]) = gpu_info  # fmt: skip
+                    compose["services"][service_name]["deploy"]["resources"][
+                        "reservations"
+                    ]["devices"][0] = gpu_info
                 else:
                     print(
-                        "Notice: Couldn't patch Jina GPU output, may have been fixed upstream."
+                        "Notice: Couldn't patch Jina GPU output, "
+                        "may have been fixed upstream."
                     )
 
     # Add Jina containers to logstashembed's dependencies

@@ -54,6 +54,7 @@ services:
     - Tweet Ingest Embedder
     - --description
     - Embeds documents with sentence-transformers/distiluse-base-multilingual-cased-v2
+    - --cors
     - --no-crud-endpoints
     - --expose-endpoints
     - '{"/embed": {"summary": "Embed a document"}}'

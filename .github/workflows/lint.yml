@@ -1,0 +1,46 @@
+name: Lint
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          cache: 'pipenv'
+      
+      - name: Install Pipenv
+        run: pipx install pipenv
+        
+      - name: Install Pipenv Dependencies
+        run: pipenv install --dev
+
+      - name: isort
+        if: success() || failure()
+        run: pipenv run isort **/*.py --check
+      - name: Black
+        if: success() || failure()
+        run: pipenv run black . --check
+      - name: Flake8
+        if: success() || failure()
+        run: pipenv run flake8 .
+  
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          additional_files: 'dc'

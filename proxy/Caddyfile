@@ -1,67 +1,67 @@
 {
-    order authenticate before respond
+	order authenticate before respond
 
-    security {
-        local identity store localdb {
-            realm local
-            path /data/auth/users.json
-        }
+	security {
+		local identity store localdb {
+			realm local
+			path /data/auth/users.json
+		}
 
-        authentication portal myportal {
-            enable identity store localdb
-            cookie lifetime 43200
-            crypto default token lifetime 43200
+		authentication portal myportal {
+			enable identity store localdb
+			cookie lifetime 43200
+			crypto default token lifetime 43200
 
-            ui {
-                logo url "../assets/logo.svg"
-                
-                static_asset "assets/images/favicon.png" "image/png" "/srv/assets/favicon.png"
+			ui {
+				logo url "../assets/logo.svg"
 
-                custom css path "/srv/assets/styles.css"
+				static_asset "assets/images/favicon.png" "image/png" "/srv/assets/favicon.png"
 
-                disable settings sshkeys
-                disable settings gpgkeys
-                disable settings mfa
-                disable settings connected
+				custom css path "/srv/assets/styles.css"
 
-                links {
+				disable settings sshkeys
+				disable settings gpgkeys
+				disable settings mfa
+				disable settings connected
+
+				links {
 					"Search" / icon "las la-home"
-                    "Kibana Read-Only" /kibana/ icon "las la-search"
+					"Kibana Read-Only" /kibana/ icon "las la-search"
 					"User Settings" "/auth/settings" icon "las la-user"
 				}
-            }
-        }
+			}
+		}
 
-        authorization policy mypolicy {
-           set auth url http://localhost:8080/auth/
-           allow roles authp/user authp/admin
-           bypass uri prefix /assets/
-       }
-    }
+		authorization policy mypolicy {
+			set auth url http://localhost:8080/auth/
+			allow roles authp/user authp/admin
+			bypass uri prefix /assets/
+		}
+	}
 }
 
 http://localhost:8080 {
-    redir /auth /auth/
-    redir /kibana /kibana/
+	redir /auth /auth/
+	redir /kibana /kibana/
 
-    route /auth/* {
-        authenticate with myportal
-    }
+	route /auth/* {
+		authenticate with myportal
+	}
 
-    route /kibana/* {
-        authorize with mypolicy
-        reverse_proxy http://kibana:5601 {
-            header_up Authorization "Basic {$KIBANA_PROXY_AUTH_HEADER}"
-            header_up Host localhost:8080
-        }
-    }
-    
-    route {
-        authorize with mypolicy
-        reverse_proxy http://search:8080
-    }
+	route /kibana/* {
+		authorize with mypolicy
+		reverse_proxy http://kibana:5601 {
+			header_up Authorization "Basic {$KIBANA_PROXY_AUTH_HEADER}"
+			header_up Host localhost:8080
+		}
+	}
 
-    handle_errors {
-        respond "{err.status_code} {err.status_text}"
-    }
+	route {
+		authorize with mypolicy
+		reverse_proxy http://search:8080
+	}
+
+	handle_errors {
+		respond "{err.status_code} {err.status_text}"
+	}
 }

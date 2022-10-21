@@ -24,7 +24,7 @@ jobs:
         run: pipx install pipenv
         
       - name: Install Pipenv Dependencies
-        run: pipenv install
+        run: pipenv install --dev
 
       - name: isort
         if: success() || failure()

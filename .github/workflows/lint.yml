@@ -1,4 +1,4 @@
-name: Python Lint
+name: Lint
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  python:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,3 +35,12 @@ jobs:
       - name: Flake8
         if: success() || failure()
         run: pipenv run flake8 .
+  
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          additional_files: 'dc'

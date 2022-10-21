@@ -16,9 +16,9 @@ if [ "$1" == "set-profile" ]; then
     PROFILE_PATH_SYSTEM="embedder/profiles/$2.yml"
 
 
-    if [ -f $PROFILE_PATH_USER ]; then
+    if [ -f "$PROFILE_PATH_USER" ]; then
         PROFILE_PATH=$PROFILE_PATH_USER
-    elif [ -f $PROFILE_PATH_SYSTEM ]; then
+    elif [ -f "$PROFILE_PATH_SYSTEM" ]; then
         PROFILE_PATH=$PROFILE_PATH_SYSTEM
     else
         error "Profile could not be found at $PROFILE_PATH_USER or $PROFILE_PATH_SYSTEM."
@@ -27,15 +27,14 @@ if [ "$1" == "set-profile" ]; then
     
     success "Setting preferred profile to $PROFILE_PATH"
 
-    echo $PROFILE_PATH > .embedder-profile
+    echo "$PROFILE_PATH" > .embedder-profile
 
     exit
 fi;
 
 
 # Detect compose command prefix
-docker compose &> /dev/null
-if [ $? == 0 ]; then
+if docker compose &> /dev/null; then
     DOCKER_COMPOSE=(docker compose)
 else
     DOCKER_COMPOSE=(docker-compose)
@@ -49,11 +48,11 @@ fi
 
 EMBEDDER_PROFILE="$(cat .embedder-profile)"
 
-if [ ! -f $EMBEDDER_PROFILE ]; then
+if [ ! -f "$EMBEDDER_PROFILE" ]; then
     error "Selected embedder profile ($EMBEDDER_PROFILE) no longer exists"
 fi
 
-DOCKER_COMPOSE+=(-f $EMBEDDER_PROFILE)
+DOCKER_COMPOSE+=(-f "$EMBEDDER_PROFILE")
 
 if [ "$1" == "watch-health" ]; then
     shift 1

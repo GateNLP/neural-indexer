@@ -1,7 +1,9 @@
-if [ x${ELASTIC_PASSWORD} == x ]; then
+#!/usr/bin/bash
+
+if [ "${ELASTIC_PASSWORD}" == "" ]; then
     echo "Set the ELASTIC_PASSWORD environment variable in the .env file";
     exit 1;
-elif [ x${KIBANA_PASSWORD} == x ]; then
+elif [ "${KIBANA_PASSWORD}" == "" ]; then
     echo "Set the KIBANA_PASSWORD environment variable in the .env file";
     exit 1;
 fi;
@@ -31,7 +33,7 @@ echo "Setting kibana_system password";
 until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
 
 echo "Creating readonly user"
-curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01:9200/_security/user/${ELASTIC_READONLY_USERNAME} -d "{\"password\":\"${ELASTIC_READONLY_PASSWORD}\", \"roles\" : [ \"viewer\"]}"
+curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01:9200/_security/user/"${ELASTIC_READONLY_USERNAME}" -d "{\"password\":\"${ELASTIC_READONLY_PASSWORD}\", \"roles\" : [ \"viewer\"]}"
 
 echo "Importing index template";
 curl -s -X PUT --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01:9200/_index_template/embeddable -d @setup/index_template.json | grep -q "\"acknowledged\":true\""

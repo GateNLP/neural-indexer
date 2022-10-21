@@ -7,7 +7,7 @@ services:
       - certs:/usr/share/elasticsearch/config/certs
       - ./setup:/usr/share/elasticsearch/setup:ro
     user: "0"
-    command: "bash setup/setup.sh"
+    command: "./setup/setup.sh"
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_PASSWORD=${KIBANA_PASSWORD}

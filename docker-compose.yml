@@ -311,7 +311,7 @@ services:
     build:
       context: ./proxy
       args:
-        - CADDY_VERSION=2.6.2
+        - CADDY_VERSION=2.6.4
     volumes:
       - ./proxy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data

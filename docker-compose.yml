@@ -176,10 +176,7 @@ services:
       timeout: 10s
       retries: 120
   logstashingest:
-    build:
-      context: './logstash/common'
-      args:
-        - STACK_VERSION=${STACK_VERSION}
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     depends_on:
       es01:
         condition: service_healthy
@@ -206,10 +203,7 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - ELASTIC_INDEX=${ELASTIC_INDEX}
   logstashembed:
-    build:
-      context: './logstash/common'
-      args:
-        - STACK_VERSION=${STACK_VERSION}
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     depends_on:
       es01:
         condition: service_healthy

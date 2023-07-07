@@ -1,8 +1,8 @@
-# Tweet Ingester
+# Embedding Ingestion Service
 
 ## Architecture
 
-Fundamentally, the ingester reads tweets from an on-disk data source, and ingests them into Elasticsearch with an embedding produced by a transformer model.
+Fundamentally, the service reads documents from an on-disk data source, and ingests them into Elasticsearch with an embedding produced by a transformer model.
 
 Considering some files we ingest are upwards of 30 million tweets long, the embedding process can take time in the order of weeks. Logstash's ability to resume position in long files is not completely trustworthy, so it's in the interest for reliable embedding to ingest as quickly as possible.
 
@@ -64,7 +64,7 @@ Copy `.env.example` to `.env` and complete the missing variables
 * If you wish to use a GPU-accelerated embedder, set `EXECUTOR_GPU` to the ID of the GPU to use
 
 > **Warning**
-> It is **strongly advised** that the `LOGSTASH_INGEST` directory is empty until the system is online and healthy, and that data is moved into it file-by-file.
+> It is **strongly advised** that the `LOGSTASH_INGEST` directory is empty until the system is online and healthy.
 >
 > Therefore, we suggest creating a directory for data storage (e.g. `/data/tweets`) and an empty subdirectory for ingest (e.g. `/data/tweets/ingest`). The outer directory stores all data to be ingested, and the inner directory is used for `LOGSTASH_INGEST`. Then, data files can easily be moved into it when ready to ingest.
 
@@ -110,7 +110,7 @@ The embedder adds an integer version field to documents, specified by the `EMBED
 
 To ingest, place content in the directory specified in the `.env` file.
 
-Files must be a series of gzipped JSON files, with one JSON object per line, with the extension `.json.gz`.
+Files should be in one or more JSON files (optionally gzipped), with one JSON document per line. It is expected each document has a `doc_id` field with a unique ID, this can be modified by altering the logstash ingest config. For an example of a custom config, see `logstash/ingest/pipeline/ingest-gatetweet.conf`.
 
 A dashboard called "Tweet Ingest Overview" is automatically created in Kibana, which displays information about the progress of the ingest.
 
@@ -124,10 +124,12 @@ Instead, a custom search interface is provided at `localhost:8080`, using the cr
 <summary>Why does it create saved objects for each search?</summary>
 
 <blockquote>
-As of writing, Kibana does not support approximate kNN searches. With the old exact kNN method, Kibana could be 'tricked' into performing one. Since the search was performed by a script query, Kibana could just be fed the query object in the URL, and it would just display it in JSON form in the search box but still do the search.
+As of writing, Kibana does not support approximate kNN searches. With the old exact kNN method, Kibana could be 'tricked' into performing one. Since the search was performed by a script query, Kibana could just be fed the query object in the URL, and it would display it in JSON form in the search box but still do the search.
 
-The approximate method is configured by the `knn` key, which is a sibling to `query`. Kibana is unaware this key exists, but if a saved search contains it, it will be passed to Elastic unmodified. So, by manually creating saved searches with the `knn` key, we can get Kibana to perform them, even if it's unaware of it. The problem with this method, however, is Kibana 'helpfully' adds an empty query to our saved search, which causes Elasticsearch to return all documents _in addition to our approximate kNN search_. To bypass this, we also put a query into the saved object which is guaranteed to return 0 results (we query for documents without an `_id` field), and Elastic combines the 0 results with our kNN results.
+The approximate method is configured by the `knn` key, which is a sibling to `query`. Kibana is unaware this key exists, but if a saved search contains it, it will be passed to Elastic unmodified. So, by manually creating saved searches with the `knn` key, we can get Kibana to perform them, even if it's unaware of it.
 
-The downside of this method is that you cannot then additionally filter the results, because filters on approximate kNN queries must be passed as part of the kNN query options (to ensure `k` results are actually returned). Any filters added will do nothing, because they will be considered together with "doesn't have an `_id`".
+The downside of this method is that you cannot then additionally filter the results, because filters on approximate kNN queries must be passed as part of the kNN query options (to ensure `k` results are actually returned).
+
+This can all be avoided if you search the Elastic index via its API, so we would suggest using that for any serious searching.
 </blockquote>
 </details>

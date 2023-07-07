@@ -103,9 +103,7 @@ service_monitoring_hosts = []
 for service_name, service in compose["services"].items():
     # Find monitoring ports from expose
     # Typically 9090 then 9091,9092,... for executors
-    monitoring_port = list(
-        filter(lambda p: 9000 <= int(p) <= 9999, service["expose"])
-    )
+    monitoring_port = list(filter(lambda p: 9000 <= int(p) <= 9999, service["expose"]))
 
     assert len(monitoring_port) == 1, (
         f"Service {service_name} has does not have exactly"
@@ -119,9 +117,7 @@ for service_name, service in compose["services"].items():
     )
 
     # Don't forward the monitoring port
-    compose["services"][service_name]["ports"].remove(
-        "{0}:{0}".format(monitoring_port)
-    )
+    compose["services"][service_name]["ports"].remove("{0}:{0}".format(monitoring_port))
     # Remove service ports if now empty
     if len(compose["services"][service_name]["ports"]) == 0:
         del compose["services"][service_name]["ports"]

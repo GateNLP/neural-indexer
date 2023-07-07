@@ -193,7 +193,7 @@ services:
       - ./logstash/common/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./logstash/ingest/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
       - ./logstash/ingest/pipeline:/usr/share/logstash/pipeline:ro
-      - ${LOGSTASH_INGEST}:/ingest:ro
+      - ${LOGSTASH_INGEST}:/ingest
     environment:
       - ELASTICSEARCH_HOSTS=https://es01:9200
       - ELASTICSEARCH_USERNAME=elastic

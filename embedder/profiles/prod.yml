@@ -193,15 +193,8 @@ services:
     ports:
     - 52592:52592
   logstashembed:
-    depends_on:
-      embedder-rep-0:
-        condition: service_healthy
-      embedder-rep-1:
-        condition: service_healthy
-      embedder-rep-2:
-        condition: service_healthy
-      gateway:
-        condition: service_healthy
+    environment:
+    - POOL_MAX=3
   metricbeat:
     environment:
     - JINA_HOSTS=[http://embedder-rep-0:9090, http://embedder-rep-1:9090, http://embedder-rep-2:9090,

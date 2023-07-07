@@ -85,11 +85,8 @@ services:
     ports:
     - 52592:52592
   logstashembed:
-    depends_on:
-      embedder:
-        condition: service_healthy
-      gateway:
-        condition: service_healthy
+    environment:
+    - POOL_MAX=1
   metricbeat:
     environment:
     - JINA_HOSTS=[http://embedder:9090, http://gateway:9090]

@@ -126,6 +126,10 @@ Kibana can be accessed at `localhost:5601/kibana` (note the suffix) with the use
 
 Instead, a custom search interface is provided at `localhost:8080`, using the credentials set by `ELASTIC_READONLY_USERNAME` and `ELASTIC_READONLY_PASSWORD`. A query document can be entered, and the parameters of the approximate-kNN search adjusted using the controls. It is currently not possible to filter results, as Kibana is unable to alter the properties of an approximate kNN search itself. Please note that each search creates a saved object in the form "UI Search YYYY-MM-DD HH:MM:SS.ssssss", you may wish to purge these periodically.
 
+> **Note**
+> The hit count shown in the Kibana UI is innacurate. The actual number of hits will be the `k` value set in the search UI.
+
+
 <details>
 <summary>Why does it create saved objects for each search?</summary>
 

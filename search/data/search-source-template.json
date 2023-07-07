@@ -5,6 +5,7 @@
         "k": null,
         "num_candidates": null
     },
+    "min_score": 1.0000001,
     "query": {
         "language": "lucene",
         "query": ""

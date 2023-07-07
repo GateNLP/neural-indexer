@@ -11,8 +11,8 @@ In this ingester, we make the embedding process asynchronous, ingesting tweets i
 ```mermaid
 flowchart TD
     D[Tweet Data Files] --> I[Logstash Ingest]
-    I --GATE Tweet Format--> Elasticsearch
-    I --Tweet ID & Text Only--> Q[RabbitMQ]
+    I --Document--> Elasticsearch
+    I --Doc ID & Text Only--> Q[RabbitMQ]
     Q --> B[Logstash Embed]
     B <--> J
     B --> Elasticsearch
@@ -110,7 +110,13 @@ The embedder adds an integer version field to documents, specified by the `EMBED
 
 To ingest, place content in the directory specified in the `.env` file.
 
-Files should be in one or more JSON files (optionally gzipped), with one JSON document per line. It is expected each document has a `doc_id` field with a unique ID, this can be modified by altering the logstash ingest config. For an example of a custom config, see `logstash/ingest/pipeline/ingest-gatetweet.conf`.
+Files should be in one or more JSON files (optionally gzipped), with one JSON document per line. Documents are expected to be in the format of:
+
+* `doc_id`: A unique ID for the document
+* `text`: The text of the document to embed
+* and any other fields, which will be stored in Elasticsearch unchanged
+
+This format can be modified by altering the logstash ingest config. For an example of a custom config, see `logstash/ingest/pipeline/ingest-gatetweet.conf`.
 
 A dashboard called "Tweet Ingest Overview" is automatically created in Kibana, which displays information about the progress of the ingest.
 

@@ -1,33 +1,14 @@
-# Embedding Ingestion Service
+# GATE Neural Indexer
 
 ## Architecture
 
 Fundamentally, the service reads documents from an on-disk data source, and ingests them into Elasticsearch with an embedding produced by a transformer model.
 
-Considering some files we ingest are upwards of 30 million tweets long, the embedding process can take time in the order of weeks. Logstash's ability to resume position in long files is not completely trustworthy, so it's in the interest for reliable embedding to ingest as quickly as possible.
+Considering some files we ingest are upwards of 30 million documents long, the embedding process can take time in the order of weeks. Logstash's ability to resume position in long files is not completely trustworthy, so it's in the interest for reliable embedding to ingest as quickly as possible.
 
-In this ingester, we make the embedding process asynchronous, ingesting tweets immediately without embedding, then using a queue to store un-embedded tweets.
+In this ingester, we make the embedding process asynchronous, ingesting documents immediately without embedding, then using a queue to store un-embedded documents.
 
-```mermaid
-flowchart TD
-    D[Tweet Data Files] --> I[Logstash Ingest]
-    I --Document--> Elasticsearch
-    I --Doc ID & Text Only--> Q[RabbitMQ]
-    Q --> B[Logstash Embed]
-    B <--> J
-    B --> Elasticsearch
-    subgraph ML[Embedding Service]
-    J[Jina Gateway] <--> E1[Executor 1]
-    J <--> Ed[Executor ...]
-    J <--> En[Executor n]
-    end
-    subgraph Elasticsearch[Elasticsearch Cluster]
-    ES1
-    ES2
-    ES3
-    end
-    style ML fill:none, stroke:#4ddf4d;
-```
+![A diagram of the service architecture](.github/img/architecture.png)
 
 ### Embedding Service
 
@@ -66,7 +47,7 @@ Copy `.env.example` to `.env` and complete the missing variables
 > **Warning**
 > It is **strongly advised** that the `LOGSTASH_INGEST` directory is empty until the system is online and healthy.
 >
-> Therefore, we suggest creating a directory for data storage (e.g. `/data/tweets`) and an empty subdirectory for ingest (e.g. `/data/tweets/ingest`). The outer directory stores all data to be ingested, and the inner directory is used for `LOGSTASH_INGEST`. Then, data files can easily be moved into it when ready to ingest.
+> Therefore, we suggest creating a directory for data storage (e.g. `/data/mydocs`) and an empty subdirectory for ingest (e.g. `/data/mydocs/ingest`). The outer directory stores all data to be ingested, and the inner directory is used for `LOGSTASH_INGEST`. Then, data files can easily be moved into it when ready to ingest.
 
 ### 2. Defining Embedding Service 
 
@@ -124,11 +105,12 @@ A dashboard called "Tweet Ingest Overview" is automatically created in Kibana, w
 
 Kibana can be accessed at `localhost:5601/kibana` (note the suffix) with the user `elastic` and the password defined by `ELASTIC_PASSWORD`, however it cannot perform vector queries.
 
-Instead, a custom search interface is provided at `localhost:8080`, using the credentials set by `ELASTIC_READONLY_USERNAME` and `ELASTIC_READONLY_PASSWORD`. A query document can be entered, and the parameters of the approximate-kNN search adjusted using the controls. It is currently not possible to filter results, as Kibana is unable to alter the properties of an approximate kNN search itself. Please note that each search creates a saved object in the form "UI Search YYYY-MM-DD HH:MM:SS.ssssss", you may wish to purge these periodically.
+Instead, a custom search interface is provided at `localhost:8080`, using the credentials set by `SEARCH_USERNAME` and `SEARCH_PASSWORD`. A query document can be entered, and the parameters of the approximate-kNN search adjusted using the controls. It is currently not possible to filter results, as Kibana is unable to alter the properties of an approximate kNN search itself. Please note that each search creates a saved object in the form "UI Search YYYY-MM-DD HH:MM:SS.ssssss", you may wish to purge these periodically.
+
+The same credentials as the search interface can also be used to access the full Kibana interface read-only at `localhost:8080/kibana`.
 
 > **Note**
 > The hit count shown in the Kibana UI is innacurate. The actual number of hits will be the `k` value set in the search UI.
-
 
 <details>
 <summary>Why does it create saved objects for each search?</summary>

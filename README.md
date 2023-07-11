@@ -125,3 +125,21 @@ The downside of this method is that you cannot then additionally filter the resu
 This can all be avoided if you search the Elastic index via its API, so we would suggest using that for any serious searching.
 </blockquote>
 </details>
+
+## Usage & Copyright
+If you use this software in your research or work, please let me know at [frheppell1@sheffield.ac.uk](mailto:frheppell1@sheffield.ac.uk). Contributions are welcome, please make a pull request.
+
+> Copyright (C) 2023-23 Freddy Heppell and The University of Sheffield.
+>
+> This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+>
+>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+> You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+

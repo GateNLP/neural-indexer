@@ -48,6 +48,11 @@ http://localhost:8080 {
 		authenticate with myportal
 	}
 
+	# Prevent the readonly user from changing their password
+	route /kibana/internal/security/users/readonly/password {
+		respond 403
+	}
+
 	route /kibana/* {
 		authorize with mypolicy
 		reverse_proxy http://kibana:5601 {

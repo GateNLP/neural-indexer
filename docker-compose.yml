@@ -176,10 +176,7 @@ services:
       timeout: 10s
       retries: 120
   logstashingest:
-    build:
-      context: './logstash/common'
-      args:
-        - STACK_VERSION=${STACK_VERSION}
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     depends_on:
       es01:
         condition: service_healthy
@@ -196,7 +193,7 @@ services:
       - ./logstash/common/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./logstash/ingest/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
       - ./logstash/ingest/pipeline:/usr/share/logstash/pipeline:ro
-      - ${LOGSTASH_INGEST}:/ingest:ro
+      - ${LOGSTASH_INGEST}:/ingest
     environment:
       - ELASTICSEARCH_HOSTS=https://es01:9200
       - ELASTICSEARCH_USERNAME=elastic
@@ -206,10 +203,7 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - ELASTIC_INDEX=${ELASTIC_INDEX}
   logstashembed:
-    build:
-      context: './logstash/common'
-      args:
-        - STACK_VERSION=${STACK_VERSION}
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     depends_on:
       es01:
         condition: service_healthy
@@ -311,7 +305,7 @@ services:
     build:
       context: ./proxy
       args:
-        - CADDY_VERSION=2.6.2
+        - CADDY_VERSION=2.6.4
     volumes:
       - ./proxy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data

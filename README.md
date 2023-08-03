@@ -1,33 +1,14 @@
-# Tweet Ingester
+# GATE Neural Indexer
 
 ## Architecture
 
-Fundamentally, the ingester reads tweets from an on-disk data source, and ingests them into Elasticsearch with an embedding produced by a transformer model.
+Fundamentally, the service reads documents from an on-disk data source, and ingests them into Elasticsearch with an embedding produced by a transformer model.
 
-Considering some files we ingest are upwards of 30 million tweets long, the embedding process can take time in the order of weeks. Logstash's ability to resume position in long files is not completely trustworthy, so it's in the interest for reliable embedding to ingest as quickly as possible.
+Considering some files we ingest are upwards of 30 million documents long, the embedding process can take time in the order of weeks. Logstash's ability to resume position in long files is not completely trustworthy, so it's in the interest for reliable embedding to ingest as quickly as possible.
 
-In this ingester, we make the embedding process asynchronous, ingesting tweets immediately without embedding, then using a queue to store un-embedded tweets.
+In this ingester, we make the embedding process asynchronous, ingesting documents immediately without embedding, then using a queue to store un-embedded documents.
 
-```mermaid
-flowchart TD
-    D[Tweet Data Files] --> I[Logstash Ingest]
-    I --GATE Tweet Format--> Elasticsearch
-    I --Tweet ID & Text Only--> Q[RabbitMQ]
-    Q --> B[Logstash Embed]
-    B <--> J
-    B --> Elasticsearch
-    subgraph ML[Embedding Service]
-    J[Jina Gateway] <--> E1[Executor 1]
-    J <--> Ed[Executor ...]
-    J <--> En[Executor n]
-    end
-    subgraph Elasticsearch[Elasticsearch Cluster]
-    ES1
-    ES2
-    ES3
-    end
-    style ML fill:none, stroke:#4ddf4d;
-```
+![A diagram of the service architecture](.github/img/architecture.png)
 
 ### Embedding Service
 
@@ -64,9 +45,9 @@ Copy `.env.example` to `.env` and complete the missing variables
 * If you wish to use a GPU-accelerated embedder, set `EXECUTOR_GPU` to the ID of the GPU to use
 
 > **Warning**
-> It is **strongly advised** that the `LOGSTASH_INGEST` directory is empty until the system is online and healthy, and that data is moved into it file-by-file.
+> It is **strongly advised** that the `LOGSTASH_INGEST` directory is empty until the system is online and healthy.
 >
-> Therefore, we suggest creating a directory for data storage (e.g. `/data/tweets`) and an empty subdirectory for ingest (e.g. `/data/tweets/ingest`). The outer directory stores all data to be ingested, and the inner directory is used for `LOGSTASH_INGEST`. Then, data files can easily be moved into it when ready to ingest.
+> Therefore, we suggest creating a directory for data storage (e.g. `/data/mydocs`) and an empty subdirectory for ingest (e.g. `/data/mydocs/ingest`). The outer directory stores all data to be ingested, and the inner directory is used for `LOGSTASH_INGEST`. Then, data files can easily be moved into it when ready to ingest.
 
 ### 2. Defining Embedding Service 
 
@@ -110,7 +91,13 @@ The embedder adds an integer version field to documents, specified by the `EMBED
 
 To ingest, place content in the directory specified in the `.env` file.
 
-Files must be a series of gzipped JSON files, with one JSON object per line, with the extension `.json.gz`.
+Files should be in one or more JSON files (optionally gzipped), with one JSON document per line. Documents are expected to be in the format of:
+
+* `doc_id`: A unique ID for the document
+* `text`: The text of the document to embed
+* and any other fields, which will be stored in Elasticsearch unchanged
+
+This format can be modified by altering the logstash ingest config. For an example of a custom config, see `logstash/ingest/pipeline/ingest-gatetweet.conf`.
 
 A dashboard called "Tweet Ingest Overview" is automatically created in Kibana, which displays information about the progress of the ingest.
 
@@ -118,16 +105,41 @@ A dashboard called "Tweet Ingest Overview" is automatically created in Kibana, w
 
 Kibana can be accessed at `localhost:5601/kibana` (note the suffix) with the user `elastic` and the password defined by `ELASTIC_PASSWORD`, however it cannot perform vector queries.
 
-Instead, a custom search interface is provided at `localhost:8080`, using the credentials set by `ELASTIC_READONLY_USERNAME` and `ELASTIC_READONLY_PASSWORD`. A query document can be entered, and the parameters of the approximate-kNN search adjusted using the controls. It is currently not possible to filter results, as Kibana is unable to alter the properties of an approximate kNN search itself. Please note that each search creates a saved object in the form "UI Search YYYY-MM-DD HH:MM:SS.ssssss", you may wish to purge these periodically.
+Instead, a custom search interface is provided at `localhost:8080`, using the credentials set by `SEARCH_USERNAME` and `SEARCH_PASSWORD`. A query document can be entered, and the parameters of the approximate-kNN search adjusted using the controls. It is currently not possible to filter results, as Kibana is unable to alter the properties of an approximate kNN search itself. Please note that each search creates a saved object in the form "UI Search YYYY-MM-DD HH:MM:SS.ssssss", you may wish to purge these periodically.
+
+The same credentials as the search interface can also be used to access the full Kibana interface read-only at `localhost:8080/kibana`.
+
+> **Note**
+> The hit count shown in the Kibana UI is innacurate. The actual number of hits will be the `k` value set in the search UI.
 
 <details>
 <summary>Why does it create saved objects for each search?</summary>
 
 <blockquote>
-As of writing, Kibana does not support approximate kNN searches. With the old exact kNN method, Kibana could be 'tricked' into performing one. Since the search was performed by a script query, Kibana could just be fed the query object in the URL, and it would just display it in JSON form in the search box but still do the search.
+As of writing, Kibana does not support approximate kNN searches. With the old exact kNN method, Kibana could be 'tricked' into performing one. Since the search was performed by a script query, Kibana could just be fed the query object in the URL, and it would display it in JSON form in the search box but still do the search.
 
-The approximate method is configured by the `knn` key, which is a sibling to `query`. Kibana is unaware this key exists, but if a saved search contains it, it will be passed to Elastic unmodified. So, by manually creating saved searches with the `knn` key, we can get Kibana to perform them, even if it's unaware of it. The problem with this method, however, is Kibana 'helpfully' adds an empty query to our saved search, which causes Elasticsearch to return all documents _in addition to our approximate kNN search_. To bypass this, we also put a query into the saved object which is guaranteed to return 0 results (we query for documents without an `_id` field), and Elastic combines the 0 results with our kNN results.
+The approximate method is configured by the `knn` key, which is a sibling to `query`. Kibana is unaware this key exists, but if a saved search contains it, it will be passed to Elastic unmodified. So, by manually creating saved searches with the `knn` key, we can get Kibana to perform them, even if it's unaware of it.
 
-The downside of this method is that you cannot then additionally filter the results, because filters on approximate kNN queries must be passed as part of the kNN query options (to ensure `k` results are actually returned). Any filters added will do nothing, because they will be considered together with "doesn't have an `_id`".
+The downside of this method is that you cannot then additionally filter the results, because filters on approximate kNN queries must be passed as part of the kNN query options (to ensure `k` results are actually returned).
+
+This can all be avoided if you search the Elastic index via its API, so we would suggest using that for any serious searching.
 </blockquote>
 </details>
+
+## Usage & Copyright
+If you use this software in your research or work, please let me know at [frheppell1@sheffield.ac.uk](mailto:frheppell1@sheffield.ac.uk). Contributions are welcome, please make a pull request.
+
+> Copyright (C) 2023-23 Freddy Heppell and The University of Sheffield.
+>
+> This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+>
+>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+> You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+

@@ -18,10 +18,12 @@ services:
     - embedder
     - --uses
     - config.yml
-    - --port
-    - '8081'
     - --gpus
     - device=${EXECUTOR_GPU}
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8081'
     - --monitoring
     - --port-monitoring
     - '9090'
@@ -49,7 +51,7 @@ services:
     healthcheck:
       interval: 10s
       retries: 60
-      test: python -m jina.resources.health_check.pod localhost:8081
+      test: jina ping executor 127.0.0.1:8081
     image: ghcr.io/freddyheppell/transformer-torch-encoder-cu113:latest-gpu
     networks:
     - default
@@ -58,10 +60,6 @@ services:
   gateway:
     command:
     - gateway
-    - --polling
-    - ANY
-    - --port
-    - '52592'
     - --title
     - Tweet Ingest Embedder
     - --description
@@ -70,14 +68,16 @@ services:
     - --no-crud-endpoints
     - --expose-endpoints
     - '{"/embed": {"summary": "Embed a document"}}'
-    - --protocol
-    - HTTP
+    - --uses
+    - HTTPGateway
     - --graph-description
     - '{"embedder": ["end-gateway"], "start-gateway": ["embedder"]}'
     - --deployments-addresses
     - '{"embedder": ["embedder:8081"]}'
-    - --pod-role
-    - GATEWAY
+    - --port
+    - '52592'
+    - --protocol
+    - HTTP
     - --monitoring
     - --port-monitoring
     - '9090'
@@ -86,22 +86,19 @@ services:
     environment:
     - JINA_LOG_LEVEL=INFO
     expose:
-    - '52592'
-    - '9090'
+    - 52592
+    - 9090
     healthcheck:
       interval: 2s
-      test: python -m jina.resources.health_check.gateway localhost:52592 http
-    image: jinaai/jina:3.8.1-py38-standard
+      test: jina ping gateway http://127.0.0.1:52592
+    image: jinaai/jina:3.15.4-py38-standard
     networks:
     - default
     ports:
     - 52592:52592
   logstashembed:
-    depends_on:
-      embedder:
-        condition: service_healthy
-      gateway:
-        condition: service_healthy
+    environment:
+    - POOL_MAX=1
   metricbeat:
     environment:
     - JINA_HOSTS=[http://embedder:9090, http://gateway:9090]

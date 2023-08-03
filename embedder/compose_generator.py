@@ -83,87 +83,90 @@ final_path = os.path.join(
     compose_filename,
 )
 
-with open(temp_path, "r") as in_f, open(final_path, "w") as out_f:
+with open(temp_path, "r") as in_f:
     original_compose = yaml.safe_load(in_f)
 
-    # Since this file is going to be an override, we only need the services
-    # and a definition for the huggingface cache volume
-    compose = {
-        "services": original_compose["services"],
-        "volumes": {"huggingface": {"driver": "local"}},
-    }
+# Since this file is going to be an override, we only need the services
+# and a definition for the huggingface cache volume
+compose = {
+    "services": original_compose["services"],
+    "volumes": {"huggingface": {"driver": "local"}},
+}
 
-    # Adjust Gateway Version
-    image = compose["services"]["gateway"]["image"]
-    image = image.replace("master", jina.__version__)
-    compose["services"]["gateway"]["image"] = image
+# Adjust Gateway Version
+image = compose["services"]["gateway"]["image"]
+image = image.replace("master", jina.__version__)
+compose["services"]["gateway"]["image"] = image
 
-    # Create a list of Prometheus endpoints to watch
-    service_monitoring_hosts = []
-    for service_name, service in compose["services"].items():
-        # Find monitoring ports from expose
-        # Typically 9090 then 9091,9092,... for executors
-        monitoring_port = list(
-            filter(lambda p: 9000 <= int(p) <= 9999, service["expose"])
-        )
+# Create a list of Prometheus endpoints to watch
+service_monitoring_hosts = []
+for service_name, service in compose["services"].items():
+    # Find monitoring ports from expose
+    # Typically 9090 then 9091,9092,... for executors
+    monitoring_port = list(filter(lambda p: 9000 <= int(p) <= 9999, service["expose"]))
 
-        assert len(monitoring_port) == 1, (
-            f"Service {service_name} has does not have exactly"
-            f" one possible monitoring port: {','.join(monitoring_port)}"
-        )
+    assert len(monitoring_port) == 1, (
+        f"Service {service_name} has does not have exactly"
+        f" one possible monitoring port: {','.join(monitoring_port)}"
+    )
 
-        monitoring_port = monitoring_port[0]
+    monitoring_port = monitoring_port[0]
 
-        service_monitoring_hosts.append(
-            "http://{}:{}".format(service_name, monitoring_port)
-        )
+    service_monitoring_hosts.append(
+        "http://{}:{}".format(service_name, monitoring_port)
+    )
 
-        # Don't forward the monitoring port
-        compose["services"][service_name]["ports"].remove(
-            "{0}:{0}".format(monitoring_port)
-        )
-        # Remove service ports if now empty
-        if len(compose["services"][service_name]["ports"]) == 0:
-            del compose["services"][service_name]["ports"]
+    # Don't forward the monitoring port
+    compose["services"][service_name]["ports"].remove("{0}:{0}".format(monitoring_port))
+    # Remove service ports if now empty
+    if len(compose["services"][service_name]["ports"]) == 0:
+        del compose["services"][service_name]["ports"]
 
-        if "embedder" in service_name:
-            # Change healthcheck to be more realistic
-            compose["services"][service_name]["healthcheck"]["interval"] = "10s"
-            compose["services"][service_name]["healthcheck"]["retries"] = 60
+    if "embedder" in service_name:
+        # Change healthcheck to be more realistic
+        compose["services"][service_name]["healthcheck"]["interval"] = "10s"
+        compose["services"][service_name]["healthcheck"]["retries"] = 60
 
-            # Patch Jina's incorrect GPU output
-            if args.gpu:
-                gpu_info = compose["services"][service_name]["deploy"]["resources"][
+        # Patch Jina's incorrect GPU output
+        if args.gpu:
+            gpu_info = compose["services"][service_name]["deploy"]["resources"][
+                "reservations"
+            ]["devices"][0]
+
+            if "count" in gpu_info:
+                del gpu_info["count"]
+                # ${EXECUTOR_GPU} will be resolved by Docker Compose
+                gpu_info["device_ids"] = ["${EXECUTOR_GPU}"]
+                compose["services"][service_name]["deploy"]["resources"][
                     "reservations"
-                ]["devices"][0]
+                ]["devices"][0] = gpu_info
+            else:
+                print(
+                    "Notice: Couldn't patch Jina GPU output, "
+                    "may have been fixed upstream."
+                )
 
-                if "count" in gpu_info:
-                    del gpu_info["count"]
-                    # ${EXECUTOR_GPU} will be resolved by Docker Compose
-                    gpu_info["device_ids"] = ["${EXECUTOR_GPU}"]
-                    compose["services"][service_name]["deploy"]["resources"][
-                        "reservations"
-                    ]["devices"][0] = gpu_info
-                else:
-                    print(
-                        "Notice: Couldn't patch Jina GPU output, "
-                        "may have been fixed upstream."
-                    )
-
-    # Add Jina containers to logstashembed's dependencies
-    compose["services"]["logstashembed"] = {
-        "depends_on": {
-            service: {"condition": "service_healthy"} for service in compose["services"]
-        }
+# Add Jina containers to logstashembed's dependencies
+compose["services"]["logstashembed"] = {
+    "depends_on": {
+        service: {"condition": "service_healthy"} for service in compose["services"]
     }
+}
 
-    # Tell metricbeat the hosts of the Jina containers
-    compose["services"]["metricbeat"] = {
-        "environment": ["JINA_HOSTS=[{}]".format(", ".join(service_monitoring_hosts))]
-    }
+# Tell metricbeat the hosts of the Jina containers
+compose["services"]["metricbeat"] = {
+    "environment": ["JINA_HOSTS=[{}]".format(", ".join(service_monitoring_hosts))]
+}
 
-    # And now output our new compose file with warning
-    guard = "#" + ("=" * (len(max(warning, key=len)) + 2)) + "\n"
+# Set the max number of concurrent connections to the number of replicas
+compose["services"]["logstashembed"] = {
+    "environment": ["POOL_MAX={}".format(args.replicas)]
+}
+
+# And now output our new compose file with warning
+guard = "#" + ("=" * (len(max(warning, key=len)) + 2)) + "\n"
+
+with open(final_path, "w") as out_f:
     out_f.write(guard)
     out_f.write("".join("# {}\n".format(line) for line in warning))
     out_f.write(guard + "\n\n")

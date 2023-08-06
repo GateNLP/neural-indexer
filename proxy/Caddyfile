@@ -10,6 +10,7 @@
 		authentication portal myportal {
 			enable identity store localdb
 			cookie lifetime 43200
+			cookie insecure on
 			crypto default token lifetime 43200
 
 			ui {

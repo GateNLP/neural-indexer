@@ -42,7 +42,7 @@ fi
 DOCKER_COMPOSE+=(-f docker-compose.yml)
 
 if [ ! -f ".embedder-profile" ]; then
-    error "Chose an embedder profile with 'make use-PROFILE' first"
+    error "Chose an embedder profile with './dc set-profile PROFILE' first"
 fi
 
 EMBEDDER_PROFILE="$(cat .embedder-profile)"

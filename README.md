@@ -89,6 +89,9 @@ The embedder adds an integer version field to documents, specified by the `EMBED
 
 ### 4. Begin Ingesting
 
+> **Note**
+> An example dataset can be downloaded from [here](https://drive.google.com/file/d/1dBwvLzKAr4XCwFZCT7hp4yNMw8khc-zp/view?usp=sharing). Use a multilingual model for this dataset.
+
 To ingest, place content in the directory specified in the `.env` file.
 
 Files should be in one or more JSON files (optionally gzipped), with one JSON document per line. Documents are expected to be in the format of:
